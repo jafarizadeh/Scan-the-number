@@ -1,0 +1,67 @@
+.historyPanel{
+  padding:9px 10px 10px 10px;
+  display:flex;
+  flex-direction:column;
+}
+
+.historyTop{
+  height:20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.historyTitle{
+  color:#355579;
+  font-size:12px;
+  font-weight:900;
+  text-transform:uppercase;
+}
+
+.historyNote{
+  color:#5d7693;
+  font-size:11px;
+  font-weight:800;
+}
+
+.historyGrid{
+  flex:1;
+  overflow-x:auto;
+  overflow-y:hidden;
+  scrollbar-width:none;
+  display:grid;
+  grid-auto-flow:column;
+  grid-template-rows:repeat(5, 1fr);
+  grid-auto-columns:56px;
+  gap:5px 12px;
+  padding:5px 2px 2px 2px;
+  touch-action:pan-x;
+}
+
+.historyGrid::-webkit-scrollbar{
+  display:none;
+}
+
+.histItem{
+  width:56px;
+  height:30px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+.histItem .numChip{
+  width:54px;
+  min-width:54px;
+  height:22px;
+  font-size:12px;
+  border-radius:7px;
+}
+
+.timeLabel{
+  margin-top:1px;
+  font-size:8.5px;
+  line-height:1;
+  color:#607894;
+  font-weight:800;
+}

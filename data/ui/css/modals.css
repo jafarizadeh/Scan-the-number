@@ -1,0 +1,108 @@
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(40,60,80,.26);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:30;
+}
+
+.modal.show{
+  display:flex;
+}
+
+.modalBox{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:18px;
+  box-shadow:0 20px 60px rgba(30,50,80,.25);
+  width:430px;
+  max-height:410px;
+  overflow:hidden;
+}
+
+.modalHead{
+  height:46px;
+  border-bottom:1px solid var(--line);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 12px;
+}
+
+.modalHead h2{
+  margin:0;
+  font-size:18px;
+}
+
+.closeBtn{
+  height:32px;
+  padding:0 12px;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:#fff;
+  font-weight:900;
+}
+
+.modalBody{
+  padding:12px;
+  max-height:360px;
+  overflow:auto;
+}
+
+.listChoice{
+  width:100%;
+  min-height:58px;
+  border:1px solid var(--line);
+  background:#fff;
+  border-radius:14px;
+  margin-bottom:8px;
+  padding:8px 10px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  cursor:pointer;
+}
+
+.listChoice.active{
+  border:2px solid var(--blue);
+  box-shadow:0 0 0 3px rgba(47,128,237,.16);
+}
+
+.listChoiceName{
+  font-size:17px;
+  font-weight:900;
+}
+
+.listChoiceMeta{
+  margin-top:3px;
+  color:var(--muted);
+  font-size:12px;
+  font-weight:800;
+}
+
+.popupBox{
+  width:320px;
+  text-align:center;
+  padding:22px;
+}
+
+.popupTitle{
+  color:var(--green);
+  font-size:20px;
+  font-weight:900;
+}
+
+.popupNumber{
+  width:100px;
+  height:78px;
+  margin:14px auto;
+  border-radius:17px;
+  color:#fff;
+  font-size:46px;
+  font-weight:900;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}

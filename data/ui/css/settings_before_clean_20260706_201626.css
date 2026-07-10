@@ -1,0 +1,292 @@
+.hidden{
+  display:none !important;
+}
+
+.mainView{
+  display:contents;
+}
+
+.settingsView{
+  grid-row:2 / 4;
+  min-height:0;
+  display:grid;
+  grid-template-rows:38px 1fr;
+  gap:8px;
+}
+
+.settingsTop{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:rgba(255,255,255,.9);
+  border:1px solid var(--line);
+  border-radius:17px;
+  box-shadow:var(--shadow);
+  padding:0 10px;
+}
+
+.settingsTitle{
+  font-size:18px;
+  font-weight:900;
+  color:#0f2944;
+}
+
+.settingsActions{
+  display:flex;
+  gap:7px;
+}
+
+.settingsBtnSmall{
+  height:30px;
+  padding:0 12px;
+  border-radius:11px;
+  border:1px solid #cfe0ef;
+  background:#fff;
+  color:#0f2944;
+  font-size:12px;
+  font-weight:900;
+}
+
+.settingsBtnPrimary{
+  background:#2f80ed;
+  border-color:#2f80ed;
+  color:#fff;
+}
+
+.settingsGrid{
+  min-height:0;
+  display:grid;
+  grid-template-columns:235px 1fr;
+  gap:8px;
+}
+
+.settingsListPanel{
+  padding:8px;
+  display:grid;
+  grid-template-rows:18px 1fr 36px;
+  gap:7px;
+  min-height:0;
+}
+
+.settingsListScroll{
+  min-height:0;
+  overflow:auto;
+  scrollbar-width:none;
+}
+
+.settingsListScroll::-webkit-scrollbar{
+  display:none;
+}
+
+.settingsListCard{
+  width:100%;
+  min-height:55px;
+  border:1px solid #d4e2ee;
+  border-radius:14px;
+  background:linear-gradient(180deg,#ffffff,#f6faff);
+  margin-bottom:7px;
+  padding:8px 9px;
+  text-align:left;
+  box-shadow:0 2px 7px rgba(38,68,98,.06);
+  cursor:pointer;
+}
+
+.settingsListCard.active{
+  border:2px solid #2f80ed;
+  box-shadow:0 0 0 3px rgba(47,128,237,.14);
+}
+
+.settingsListName{
+  font-size:15px;
+  font-weight:900;
+  color:#0f2944;
+}
+
+.settingsListMeta{
+  margin-top:4px;
+  font-size:10.5px;
+  font-weight:800;
+  color:#5d7693;
+}
+
+.settingsListMini{
+  margin-top:6px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px;
+  max-height:24px;
+  overflow:hidden;
+}
+
+.settingsListMini .numChip{
+  min-width:24px;
+  height:20px;
+  font-size:10px;
+  border-radius:6px;
+  padding:0 5px;
+}
+
+.settingsListFooter{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+}
+
+.settingsDetailPanel{
+  padding:8px;
+  display:grid;
+  grid-template-rows:18px 1fr 42px;
+  gap:7px;
+  min-height:0;
+}
+
+.detailBox{
+  min-height:0;
+  border:1px solid #d4e2ee;
+  border-radius:16px;
+  background:linear-gradient(180deg,#ffffff,#f6faff);
+  padding:13px;
+  display:grid;
+  grid-template-columns:1fr 165px;
+  gap:12px;
+}
+
+.detailMain{
+  min-width:0;
+}
+
+.detailName{
+  font-size:30px;
+  font-weight:900;
+  color:#0f2944;
+  line-height:1;
+}
+
+.detailMeta{
+  margin-top:8px;
+  font-size:14px;
+  font-weight:900;
+  color:#5d7693;
+}
+
+.detailNote{
+  margin-top:11px;
+  color:#6f8296;
+  font-size:12px;
+  font-weight:700;
+  line-height:1.35;
+  max-width:330px;
+}
+
+.detailNumbers{
+  margin-top:12px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  max-height:78px;
+  overflow:hidden;
+}
+
+.detailSide{
+  border-left:1px solid #d9e5ef;
+  padding-left:12px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.detailSide button{
+  height:34px;
+  border-radius:11px;
+  border:1px solid #cfe0ef;
+  background:#fff;
+  color:#0f2944;
+  font-size:12px;
+  font-weight:900;
+}
+
+.detailSide button.primary{
+  background:#2f80ed;
+  border-color:#2f80ed;
+  color:#fff;
+}
+
+.detailSide button.green{
+  background:#25bf6b;
+  border-color:#25bf6b;
+  color:#fff;
+}
+
+.detailSide button.red{
+  background:#e43a47;
+  border-color:#e43a47;
+  color:#fff;
+}
+
+.settingsBottom{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+}
+
+.settingsMessage{
+  color:#5d7693;
+  font-size:12px;
+  font-weight:800;
+}
+
+.numberPickerBox{
+  width:510px;
+  max-height:430px;
+}
+
+.numberPickerGrid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:7px;
+}
+
+.numberPickBtn{
+  height:38px;
+  border-radius:12px;
+  border:2px solid rgba(255,255,255,.55);
+  color:#fff;
+  font-size:15px;
+  font-weight:900;
+  box-shadow:0 3px 8px rgba(20,40,65,.14), inset 0 1px 0 rgba(255,255,255,.22);
+  position:relative;
+}
+
+.numberPickBtn.selected{
+  outline:3px solid var(--gold);
+  box-shadow:0 0 0 4px rgba(255,204,51,.22), 0 3px 8px rgba(20,40,65,.14);
+}
+
+.numberPickBtn.selected:after{
+  content:"✓";
+  position:absolute;
+  right:6px;
+  top:4px;
+  font-size:10px;
+  color:#fff;
+}
+
+.numberPickerFooter{
+  margin-top:12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+}
+
+.numberPickerCount{
+  color:#5d7693;
+  font-size:12px;
+  font-weight:900;
+}
+
+.numberPickerActions{
+  display:flex;
+  gap:7px;
+}

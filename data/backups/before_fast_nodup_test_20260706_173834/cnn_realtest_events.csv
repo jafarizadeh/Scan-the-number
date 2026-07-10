@@ -1,0 +1,6 @@
+round_index,timestamp,number,score,margin,agreement,votes,total_frames,reason,roi_path,frame_path
+1,20260706_173511_110626,24,0.973,0.9714,1.0,6,6,fast_first_clear_capture,data/evidence/cnn_cycle_round_000001_24_roi_20260706_173511_110626.png,data/evidence/cnn_cycle_round_000001_24_frame_20260706_173511_110626.png
+2,20260706_173513_472619,24,0.9706,0.9689,1.0,6,6,fast_first_clear_capture,data/evidence/cnn_cycle_round_000002_24_roi_20260706_173513_472619.png,data/evidence/cnn_cycle_round_000002_24_frame_20260706_173513_472619.png
+3,20260706_173522_065019,24,0.9665,0.9647,1.0,6,6,fast_first_clear_capture,data/evidence/cnn_cycle_round_000003_24_roi_20260706_173522_065019.png,data/evidence/cnn_cycle_round_000003_24_frame_20260706_173522_065019.png
+4,20260706_173524_433110,3,0.981,0.98,1.0,6,6,fast_first_clear_capture,data/evidence/cnn_cycle_round_000004_3_roi_20260706_173524_433110.png,data/evidence/cnn_cycle_round_000004_3_frame_20260706_173524_433110.png
+5,20260706_173526_802900,3,0.9801,0.9791,1.0,6,6,fast_first_clear_capture,data/evidence/cnn_cycle_round_000005_3_roi_20260706_173526_802900.png,data/evidence/cnn_cycle_round_000005_3_frame_20260706_173526_802900.png

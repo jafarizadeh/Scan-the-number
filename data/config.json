@@ -1,0 +1,163 @@
+{
+  "camera": {
+    "width": 1280,
+    "height": 720,
+    "fps": 15,
+    "controls": {
+      "af_mode": "manual",
+      "lens_position": 14.0,
+      "exposure_time": 66212,
+      "analogue_gain": 4.654545307159424,
+      "awb_enable": false,
+      "colour_gains": [
+        2.523603320121765,
+        1.4890723824501038
+      ]
+    }
+  },
+  "roi": {
+    "mode": "center",
+    "cx": 0.45,
+    "cy": 0.35,
+    "w": 0.1,
+    "h": 0.16
+  },
+  "state": {
+    "empty_confirm_frames": 3,
+    "empty_template_score_min": 0.88,
+    "empty_white_ratio_max": 0.006,
+    "empty_std_max": 18.0,
+    "bright_white_ratio_min": 0.02,
+    "bright_std_min": 30.0
+  },
+  "matching": {
+    "match_size_w": 128,
+    "match_size_h": 115,
+    "score_min": 0.76,
+    "margin_min": 0.08,
+    "top_k": 20,
+    "topk_min_agreement": 0.7,
+    "topk_min_count": 12
+  },
+  "decision": {
+    "vote_window": 12,
+    "min_votes": 6,
+    "min_agreement": 0.7
+  },
+  "focus_roi": {
+    "mode": "center",
+    "cx": 0.45,
+    "cy": 0.35,
+    "w": 0.075,
+    "h": 0.12
+  },
+  "classifier": {
+    "score_min": 0.72,
+    "margin_min": 0.045,
+    "topk_min_agreement": 0.45
+  },
+  "review": {
+    "soft_vote_window": 24,
+    "min_soft_votes": 4,
+    "min_soft_agreement": 0.5
+  },
+  "digit": {
+    "score_min": 0.7,
+    "margin_min": 0.055,
+    "template_only_margin_min": 0.16
+  },
+  "real_test": {
+    "empty_frames_to_arm": 5,
+    "visible_frames_to_start": 3,
+    "capture_min_frames": 8,
+    "capture_max_frames": 20,
+    "unlock_empty_frames": 10,
+    "min_confirm_votes": 5,
+    "min_confirm_agreement": 0.8,
+    "min_confirm_score": 0.78,
+    "min_confirm_margin": 0.08,
+    "strict_confirm_agree_only": true,
+    "max_disagree_votes_for_confirm": 0,
+    "suppress_consecutive_duplicates": false
+  },
+  "cnn_model": {
+    "model_path": "data/models/roulette_mobilenet_best_single.onnx",
+    "img_size": 160
+  },
+  "cnn_real_test": {
+    "empty_frames_to_arm": 5,
+    "visible_frames_to_start": 3,
+    "capture_min_frames": 8,
+    "capture_max_frames": 18,
+    "unlock_empty_frames": 10,
+    "min_confirm_votes": 6,
+    "min_confirm_agreement": 0.7,
+    "min_confirm_score": 0.85,
+    "min_confirm_margin": 0.2,
+    "suppress_consecutive_duplicates": false,
+    "change_stable_frames": 5,
+    "change_min_score": 0.15,
+    "change_min_margin": 0.02,
+    "same_number_hold_score": 0.8,
+    "same_number_hold_margin": 0.5,
+    "same_number_hold_std_min": 10.0,
+    "same_hold_max_frames": 30,
+    "after_gap_min_score": 0.05,
+    "after_gap_min_margin": -1.0
+  },
+  "cnn_cycle_test": {
+    "visible_frames_to_start": 1,
+    "capture_min_frames": 4,
+    "capture_max_frames": 6,
+    "min_confirm_votes": 4,
+    "min_confirm_agreement": 0.7,
+    "min_confirm_score": 0.85,
+    "min_confirm_margin": 0.2,
+    "post_output_cooldown_seconds": 1.8
+  },
+  "cnn_fast_nodup_test": {
+    "capture_max_frames": 4,
+    "min_confirm_votes": 3,
+    "min_confirm_agreement": 0.7,
+    "min_confirm_score": 0.85,
+    "min_confirm_margin": 0.2
+  },
+  "cnn_fast_v2_test": {
+    "min_stable_frames": 2,
+    "min_live_score": 0.7,
+    "min_live_margin": 0.1,
+    "min_confirm_score": 0.85,
+    "min_confirm_margin": 0.2
+  },
+  "final_app": {
+    "min_stable_frames": 2,
+    "min_live_score": 0.7,
+    "min_live_margin": 0.1,
+    "min_confirm_score": 0.85,
+    "min_confirm_margin": 0.2
+  },
+  "ui_focus_view": {
+    "roi_context_factor": 3.0
+  },
+  "hardware": {
+    "dryRun": false,
+    "hardwareMode": "pico_serial",
+    "picoPort": "auto",
+    "picoBaud": 115200,
+    "buzzerEnabled": true,
+    "buzzerPin": 0,
+    "buzzerDurationMs": 350,
+    "buzzerDelayMs": 0,
+    "actuatorEnabled": true,
+    "actuatorPin": 2,
+    "actuatorDelayMs": 0,
+    "actuatorOutPercent": 35,
+    "actuatorHoldMs": 250,
+    "actuatorReturnMs": 300,
+    "actionCooldownMs": 700,
+    "allowOverlap": false,
+    "servoUpUs": 875,
+    "servoTapUs": 1475,
+    "servoHoldMs": 500
+  }
+}

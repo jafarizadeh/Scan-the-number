@@ -1,0 +1,2 @@
+review_index,timestamp,suggested_number,score,margin,agreement,votes,total_frames,reason,roi_path,frame_path
+1,20260706_173508_746770,24,0.9734,0.9719,0.6667,4,6,fast_first_clear_capture,data/review/cnn_cycle_review_000001_24_roi_20260706_173508_746770.png,data/review/cnn_cycle_review_000001_24_frame_20260706_173508_746770.png

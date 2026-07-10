@@ -1,0 +1,8 @@
+round_index,timestamp,number,score,margin,agreement,reason,roi_path,frame_path
+1,20260705_204158_226511,19,0.781,0.1011,1.0,template_classifier_agree,data/evidence/round_000001_19_roi_20260705_204158_226511.png,data/evidence/round_000001_19_frame_20260705_204158_226511.png
+2,20260705_204216_240299,4,0.8444,0.1466,1.0,template_classifier_agree,data/evidence/round_000002_4_roi_20260705_204216_240299.png,data/evidence/round_000002_4_frame_20260705_204216_240299.png
+3,20260705_204230_419521,19,0.7748,0.1067,1.0,template_classifier_agree,data/evidence/round_000003_19_roi_20260705_204230_419521.png,data/evidence/round_000003_19_frame_20260705_204230_419521.png
+4,20260705_204242_277808,32,0.8673,0.104,1.0,template_strong,data/evidence/round_000004_32_roi_20260705_204242_277808.png,data/evidence/round_000004_32_frame_20260705_204242_277808.png
+5,20260705_204255_901033,20,0.7872,0.1399,1.0,template_classifier_agree,data/evidence/round_000005_20_roi_20260705_204255_901033.png,data/evidence/round_000005_20_frame_20260705_204255_901033.png
+6,20260705_204325_171402,20,0.8714,0.1118,1.0,template_classifier_agree,data/evidence/round_000006_20_roi_20260705_204325_171402.png,data/evidence/round_000006_20_frame_20260705_204325_171402.png
+7,20260705_204425_282657,16,0.8434,0.0881,1.0,template_strong,data/evidence/round_000007_16_roi_20260705_204425_282657.png,data/evidence/round_000007_16_frame_20260705_204425_282657.png

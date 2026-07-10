@@ -1,0 +1,7 @@
+review_index,timestamp,suggested_number,score,margin,reason,roi_path,frame_path
+1,20260705_204212_955519,19,0.8007,0.0981,low_agreement_review_3_1.00,data/review/review_000001_19_roi_20260705_204212_955519.png,data/review/review_000001_19_frame_20260705_204212_955519.png
+2,20260705_204225_599108,4,0.8542,0.1867,low_agreement_review_3_1.00,data/review/review_000002_4_roi_20260705_204225_599108.png,data/review/review_000002_4_frame_20260705_204225_599108.png
+3,20260705_204238_689913,19,0.8011,0.139,low_agreement_review_3_1.00,data/review/review_000003_19_roi_20260705_204238_689913.png,data/review/review_000003_19_frame_20260705_204238_689913.png
+4,20260705_204311_137007,35,0.8485,0.0173,soft_stable_review_10_0.83,data/review/review_000004_35_roi_20260705_204311_137007.png,data/review/review_000004_35_frame_20260705_204311_137007.png
+5,20260705_204414_702923,6,0.9011,0.1065,low_agreement_review_1_1.00,data/review/review_000005_6_roi_20260705_204414_702923.png,data/review/review_000005_6_frame_20260705_204414_702923.png
+6,20260705_204421_769020,6,0.892,0.1037,low_agreement_review_3_1.00,data/review/review_000006_6_roi_20260705_204421_769020.png,data/review/review_000006_6_frame_20260705_204421_769020.png

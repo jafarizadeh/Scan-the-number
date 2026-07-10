@@ -1,0 +1,100 @@
+.historyPanel{
+  margin-top:8px;
+  height:118px;
+  border-radius:20px;
+  border:1px solid #d4e2ee;
+  background:#ffffff;
+  box-shadow:0 8px 24px rgba(31,64,98,.08);
+  padding:10px 14px 12px 14px;
+  overflow:hidden;
+}
+
+.historyHeader{
+  height:22px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.historyTitle{
+  color:#375977;
+  font-size:12px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.7px;
+}
+
+.historyHint{
+  color:#375977;
+  font-size:11px;
+  font-weight:800;
+  opacity:.9;
+  white-space:nowrap;
+}
+
+.historyScroller{
+  margin-top:8px;
+  width:100%;
+  height:70px;
+  overflow-x:auto;
+  overflow-y:hidden;
+  touch-action:pan-x;
+  cursor:grab;
+  scrollbar-width:none;
+}
+
+.historyScroller::-webkit-scrollbar{
+  display:none;
+}
+
+.historyScroller.dragging{
+  cursor:grabbing;
+}
+
+.historyList{
+  min-width:max-content;
+  height:100%;
+  display:flex;
+  flex-direction:row;
+  align-items:flex-start;
+  justify-content:flex-start;
+  gap:7px;
+  padding:2px 2px 8px 2px;
+}
+
+.historyChipWrap{
+  flex:0 0 auto;
+  width:43px;
+  height:31px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.historyChipWrap .numChip{
+  width:43px;
+  min-width:43px;
+  height:31px;
+  padding:0 4px;
+  border-radius:9px;
+  font-size:14px;
+  font-weight:900;
+  line-height:1;
+}
+
+.historyChipWrap.historyHit .numChip{
+  outline:3px solid #ffcc33;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.95),
+    0 4px 10px rgba(255,190,0,.35);
+}
+
+.historyEmpty{
+  height:31px;
+  display:flex;
+  align-items:center;
+  color:#7890aa;
+  font-size:12px;
+  font-weight:800;
+}

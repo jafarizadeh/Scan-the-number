@@ -1,0 +1,5 @@
+review_index,timestamp,suggested_number,score,margin,agreement,votes,total_frames,reason,roi_path,frame_path
+1,20260706_173908_009416,13,0.1896,0.0972,1.0,1,1,result_ended,data/review/cnn_fast_review_000001_13_roi_20260706_173908_009416.png,data/review/cnn_fast_review_000001_13_frame_20260706_173908_009416.png
+2,20260706_173908_596086,3,0.9772,0.976,0.5,2,4,fast_capture,data/review/cnn_fast_review_000002_3_roi_20260706_173908_596086.png,data/review/cnn_fast_review_000002_3_frame_20260706_173908_596086.png
+3,20260706_173922_835256,30,0.1286,0.0022,0.5,1,2,result_ended,data/review/cnn_fast_review_000003_30_roi_20260706_173922_835256.png,data/review/cnn_fast_review_000003_30_frame_20260706_173922_835256.png
+4,20260706_173923_497123,28,0.9152,0.8984,0.5,2,4,fast_capture,data/review/cnn_fast_review_000004_28_roi_20260706_173923_497123.png,data/review/cnn_fast_review_000004_28_frame_20260706_173923_497123.png

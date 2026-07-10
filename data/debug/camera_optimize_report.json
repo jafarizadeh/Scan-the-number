@@ -1,0 +1,219 @@
+{
+  "baseline_autofocus": {
+    "sharpness": 110.58223193290243,
+    "digit_edge_sharpness": 259.91639333641126,
+    "overexposed_ratio": 0.0,
+    "white_ratio": 0.20500000000000002,
+    "quality": 259.91639333641126
+  },
+  "best_manual": {
+    "sharpness": 1093.9096952754694,
+    "digit_edge_sharpness": 2929.1760177900896,
+    "overexposed_ratio": 0.01456140350877193,
+    "white_ratio": 0.20456140350877192,
+    "quality": 2886.5231038468305,
+    "lens_position": 14.0
+  },
+  "manual_scan": [
+    {
+      "sharpness": 65.12846044936904,
+      "digit_edge_sharpness": 156.16143261003384,
+      "overexposed_ratio": 0.0,
+      "white_ratio": 0.2118421052631579,
+      "quality": 156.16143261003384,
+      "lens_position": 6.0
+    },
+    {
+      "sharpness": 71.00540189289012,
+      "digit_edge_sharpness": 170.37427896275778,
+      "overexposed_ratio": 0.0,
+      "white_ratio": 0.2113157894736842,
+      "quality": 170.37427896275778,
+      "lens_position": 6.5
+    },
+    {
+      "sharpness": 76.61148322560788,
+      "digit_edge_sharpness": 183.99445920283165,
+      "overexposed_ratio": 0.0002631578947368421,
+      "white_ratio": 0.21035087719298246,
+      "quality": 183.94603960830457,
+      "lens_position": 7.0
+    },
+    {
+      "sharpness": 79.78161572791628,
+      "digit_edge_sharpness": 190.26529008925823,
+      "overexposed_ratio": 0.0,
+      "white_ratio": 0.20885964912280702,
+      "quality": 190.26529008925823,
+      "lens_position": 7.5
+    },
+    {
+      "sharpness": 80.75212911665128,
+      "digit_edge_sharpness": 189.69551920590953,
+      "overexposed_ratio": 0.0,
+      "white_ratio": 0.2073684210526316,
+      "quality": 189.69551920590953,
+      "lens_position": 8.0
+    },
+    {
+      "sharpness": 89.75483284087412,
+      "digit_edge_sharpness": 212.40960841797477,
+      "overexposed_ratio": 0.0003508771929824561,
+      "white_ratio": 0.20684210526315788,
+      "quality": 212.33507873081058,
+      "lens_position": 8.5
+    },
+    {
+      "sharpness": 98.5055850261619,
+      "digit_edge_sharpness": 233.20225507848568,
+      "overexposed_ratio": 0.0006140350877192982,
+      "white_ratio": 0.20605263157894738,
+      "quality": 233.05906071133222,
+      "lens_position": 9.0
+    },
+    {
+      "sharpness": 100.89264918436442,
+      "digit_edge_sharpness": 235.90288142505383,
+      "overexposed_ratio": 0.0003508771929824561,
+      "white_ratio": 0.20508771929824562,
+      "quality": 235.82010848420293,
+      "lens_position": 9.5
+    },
+    {
+      "sharpness": 120.5587064789166,
+      "digit_edge_sharpness": 285.7642055709449,
+      "overexposed_ratio": 0.0,
+      "white_ratio": 0.20473684210526316,
+      "quality": 285.7642055709449,
+      "lens_position": 10.0
+    },
+    {
+      "sharpness": 230.40238202523852,
+      "digit_edge_sharpness": 585.8480821021853,
+      "overexposed_ratio": 0.0016666666666666666,
+      "white_ratio": 0.20543859649122806,
+      "quality": 584.871668632015,
+      "lens_position": 10.5
+    },
+    {
+      "sharpness": 501.65552531548167,
+      "digit_edge_sharpness": 1344.130074715297,
+      "overexposed_ratio": 0.0042982456140350876,
+      "white_ratio": 0.20859649122807017,
+      "quality": 1338.3526735169594,
+      "lens_position": 11.0
+    },
+    {
+      "sharpness": 746.1723469990766,
+      "digit_edge_sharpness": 2023.7226636965217,
+      "overexposed_ratio": 0.004736842105263158,
+      "white_ratio": 0.20912280701754385,
+      "quality": 2014.1366089737487,
+      "lens_position": 11.5
+    },
+    {
+      "sharpness": 805.8061757771621,
+      "digit_edge_sharpness": 2179.2926849799937,
+      "overexposed_ratio": 0.008684210526315789,
+      "white_ratio": 0.20649122807017545,
+      "quality": 2160.3672485051675,
+      "lens_position": 12.0
+    },
+    {
+      "sharpness": 765.0412275777162,
+      "digit_edge_sharpness": 2060.237864666051,
+      "overexposed_ratio": 0.00956140350877193,
+      "white_ratio": 0.20684210526315788,
+      "quality": 2040.5390991179281,
+      "lens_position": 12.5
+    },
+    {
+      "sharpness": 832.535906278855,
+      "digit_edge_sharpness": 2238.2578545706374,
+      "overexposed_ratio": 0.009736842105263158,
+      "white_ratio": 0.20649122807017545,
+      "quality": 2216.464291249818,
+      "lens_position": 13.0
+    },
+    {
+      "sharpness": 1045.6434095875654,
+      "digit_edge_sharpness": 2808.840420898738,
+      "overexposed_ratio": 0.01087719298245614,
+      "white_ratio": 0.20657894736842106,
+      "quality": 2778.288121583699,
+      "lens_position": 13.5
+    },
+    {
+      "sharpness": 1093.9096952754694,
+      "digit_edge_sharpness": 2929.1760177900896,
+      "overexposed_ratio": 0.01456140350877193,
+      "white_ratio": 0.20456140350877192,
+      "quality": 2886.5231038468305,
+      "lens_position": 14.0
+    },
+    {
+      "sharpness": 890.2028729301325,
+      "digit_edge_sharpness": 2371.650796598953,
+      "overexposed_ratio": 0.013157894736842105,
+      "white_ratio": 0.20771929824561403,
+      "quality": 2340.4448650647564,
+      "lens_position": 14.5
+    },
+    {
+      "sharpness": 630.4947428593413,
+      "digit_edge_sharpness": 1683.3494267466913,
+      "overexposed_ratio": 0.01043859649122807,
+      "white_ratio": 0.2106140350877193,
+      "quality": 1665.7776213271425,
+      "lens_position": 15.0
+    },
+    {
+      "sharpness": 365.2609158510311,
+      "digit_edge_sharpness": 956.480586872884,
+      "overexposed_ratio": 0.01,
+      "white_ratio": 0.21350877192982456,
+      "quality": 946.9157810041552,
+      "lens_position": 15.5
+    },
+    {
+      "sharpness": 229.6629255001539,
+      "digit_edge_sharpness": 597.3606312711604,
+      "overexposed_ratio": 0.006666666666666666,
+      "white_ratio": 0.21605263157894739,
+      "quality": 593.3782270626859,
+      "lens_position": 16.0
+    },
+    {
+      "sharpness": 141.41271429670667,
+      "digit_edge_sharpness": 359.42376626654357,
+      "overexposed_ratio": 0.002807017543859649,
+      "white_ratio": 0.21657894736842104,
+      "quality": 358.4148574489532,
+      "lens_position": 16.5
+    },
+    {
+      "sharpness": 95.97411048014773,
+      "digit_edge_sharpness": 234.53761925207755,
+      "overexposed_ratio": 0.0012280701754385965,
+      "white_ratio": 0.21912280701754386,
+      "quality": 234.2495905968557,
+      "lens_position": 17.0
+    },
+    {
+      "sharpness": 77.26757411511234,
+      "digit_edge_sharpness": 186.06340273930442,
+      "overexposed_ratio": 0.0,
+      "white_ratio": 0.2199122807017544,
+      "quality": 186.06340273930442,
+      "lens_position": 17.5
+    },
+    {
+      "sharpness": 71.80157763927363,
+      "digit_edge_sharpness": 172.67479130501692,
+      "overexposed_ratio": 0.0,
+      "white_ratio": 0.22157894736842104,
+      "quality": 172.67479130501692,
+      "lens_position": 18.0
+    }
+  ]
+}

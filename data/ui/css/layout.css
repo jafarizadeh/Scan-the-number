@@ -1,0 +1,48 @@
+.app{
+  width:784px;
+  height:464px;
+  display:grid;
+  grid-template-rows:48px 205px 195px;
+  gap:8px;
+}
+
+.mainGrid{
+  display:grid;
+  grid-template-columns:150px 218px 154px 238px;
+  gap:8px;
+}
+
+.card{
+  background:rgba(255,255,255,.9);
+  border:1px solid var(--line);
+  border-radius:18px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+
+.cardTitle{
+  font-size:11px;
+  font-weight:900;
+  color:#355579;
+  letter-spacing:.7px;
+  text-transform:uppercase;
+  padding:9px 10px 0 10px;
+}
+
+.icon{
+  width:19px;
+  height:19px;
+  stroke:currentColor;
+  fill:none;
+  stroke-width:2.2;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+
+.statusDot{
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  background:var(--green);
+  display:inline-block;
+}

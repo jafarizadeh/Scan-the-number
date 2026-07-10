@@ -1,0 +1,57 @@
+.listPanel{
+  padding:0 10px 9px 10px;
+  display:flex;
+  flex-direction:column;
+}
+
+.listTop{
+  margin-top:8px;
+  display:grid;
+  grid-template-columns:1fr 88px;
+  gap:7px;
+}
+
+.listSelect{
+  height:38px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--soft);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 10px;
+  font-size:15px;
+  font-weight:900;
+}
+
+.selectBtn{
+  height:38px;
+  border-radius:12px;
+  border:1px solid #62a0ff;
+  background:#fff;
+  color:#1d68ea;
+  font-size:12px;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.listMeta{
+  margin:8px 0 6px 0;
+  font-size:12px;
+  color:#355579;
+  font-weight:900;
+}
+
+.divider{
+  height:1px;
+  background:#d9e5ef;
+  margin:8px 0 6px 0;
+}
+
+.quickTitle{
+  color:#355579;
+  font-size:11px;
+  font-weight:900;
+  text-transform:uppercase;
+  margin-bottom:6px;
+}

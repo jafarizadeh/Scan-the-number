@@ -1,0 +1,88 @@
+.shutdownBox{
+  width:340px;
+  padding:22px;
+  text-align:center;
+  border-radius:22px;
+}
+
+.shutdownIcon{
+  width:58px;
+  height:58px;
+  margin:0 auto 12px auto;
+  border-radius:18px;
+  background:#fff1f3;
+  border:1px solid #f0bbc2;
+  color:#d9303f;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.shutdownIcon svg{
+  width:32px;
+  height:32px;
+  stroke:currentColor;
+  fill:none;
+  stroke-width:2.4;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+
+.shutdownTitle{
+  color:#0f2944;
+  font-size:21px;
+  font-weight:900;
+  line-height:1;
+}
+
+.shutdownText{
+  margin-top:10px;
+  color:#5d7693;
+  font-size:12px;
+  font-weight:800;
+  line-height:1.45;
+}
+
+.shutdownMessage{
+  margin-top:12px;
+  padding:9px 10px;
+  border-radius:13px;
+  background:#f7fbff;
+  border:1px solid #d4e2ee;
+  color:#375977;
+  font-size:12px;
+  font-weight:900;
+}
+
+.shutdownActions{
+  margin-top:16px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:9px;
+}
+
+.shutdownCancel,
+.shutdownConfirm{
+  height:38px;
+  border-radius:13px;
+  font-size:13px;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.shutdownCancel{
+  background:#fff;
+  color:#0f2944;
+  border:1px solid #cfe0ef;
+}
+
+.shutdownConfirm{
+  background:linear-gradient(180deg,#f14d59,#d9303f);
+  color:#fff;
+  border:1px solid #d9303f;
+}
+
+.shutdownCancel:active,
+.shutdownConfirm:active{
+  transform:scale(.97);
+}

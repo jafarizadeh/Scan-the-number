@@ -1,0 +1,117 @@
+.infoPanel{
+  padding:7px 8px 8px 8px;
+  display:grid;
+  grid-template-rows:18px 1fr;
+  gap:6px;
+  overflow:hidden;
+}
+
+.infoHeader{
+  height:18px;
+  display:flex;
+  align-items:center;
+}
+
+.infoTitle{
+  padding:0 4px;
+  margin:0;
+  height:18px;
+  line-height:18px;
+  font-size:10px;
+  font-weight:900;
+  color:#375977;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+
+.infoStack{
+  min-height:0;
+  display:grid;
+  grid-template-rows:1fr 1fr 1fr;
+  gap:6px;
+}
+
+.infoMetric{
+  min-height:0;
+  border:1px solid #d4e2ee;
+  border-radius:14px;
+  background:linear-gradient(180deg,#ffffff,#f6faff);
+  box-shadow:0 2px 7px rgba(38,68,98,.06);
+  padding:7px 8px;
+  display:grid;
+  grid-template-columns:1fr auto;
+  align-items:center;
+  column-gap:8px;
+  overflow:hidden;
+}
+
+.infoLabel{
+  min-width:0;
+  color:#375977;
+  font-size:10.5px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.35px;
+  line-height:1.1;
+  white-space:nowrap;
+}
+
+.statusBadge,
+.numberBadge,
+.matchBadge{
+  min-width:48px;
+  height:31px;
+  padding:0 10px;
+  border-radius:11px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:14px;
+  font-weight:900;
+  line-height:1;
+  white-space:nowrap;
+}
+
+.statusBadge.running{
+  background:#e9f8ef;
+  color:#159552;
+  border:1px solid #bfe8d0;
+}
+
+.statusBadge.stopped{
+  background:#fff0f2;
+  color:#db3242;
+  border:1px solid #f3c6cc;
+}
+
+.numberBadge,
+.matchBadge{
+  color:#fff;
+  border:2px solid rgba(255,255,255,.55);
+  box-shadow:0 3px 8px rgba(20,40,65,.14), inset 0 1px 0 rgba(255,255,255,.22);
+}
+
+.numberBadge.empty,
+.matchBadge.empty{
+  background:linear-gradient(180deg,#273549,#101923);
+  color:#ffffff;
+}
+
+.numberBadge.numGreen,
+.matchBadge.numGreen{
+  background:linear-gradient(180deg,#34cc76,#1bae61);
+}
+
+.numberBadge.numRed,
+.matchBadge.numRed{
+  background:linear-gradient(180deg,#f24a56,#dc303d);
+}
+
+.numberBadge.numBlack,
+.matchBadge.numBlack{
+  background:linear-gradient(180deg,#263449,#101923);
+}
+
+.matchBadge:not(.empty){
+  outline:2px solid rgba(255,204,51,.55);
+}

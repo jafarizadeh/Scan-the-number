@@ -1,0 +1,2 @@
+round_index,timestamp,number,score,margin,agreement,votes,total_frames,reason,roi_path,frame_path
+1,20260706_173853_634230,24,0.9722,0.9708,0.75,3,4,fast_capture,data/evidence/cnn_fast_round_000001_24_roi_20260706_173853_634230.png,data/evidence/cnn_fast_round_000001_24_frame_20260706_173853_634230.png

@@ -1,0 +1,135 @@
+.listPanel{
+  padding:7px 8px 8px 8px;
+  display:grid;
+  grid-template-rows:19px 45px 1fr 1px 16px 60px;
+  gap:6px;
+  overflow:hidden;
+}
+
+.activeListHeader{
+  height:19px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:6px;
+}
+
+.activeListTitle{
+  padding:0 4px;
+  margin:0;
+  height:19px;
+  line-height:19px;
+  font-size:10px;
+  font-weight:900;
+  color:#375977;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+
+.activeListCount{
+  min-width:26px;
+  height:18px;
+  padding:0 6px;
+  border-radius:999px;
+  background:#edf5ff;
+  border:1px solid #cfe0ef;
+  color:#2f6bb8;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:10px;
+  font-weight:900;
+}
+
+.activeListButton{
+  height:45px;
+  width:100%;
+  border:1px solid #c8d9ea;
+  border-radius:14px;
+  background:linear-gradient(180deg,#ffffff,#f5f9fd);
+  box-shadow:0 2px 7px rgba(38,68,98,.06);
+  padding:0 10px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  text-align:left;
+  cursor:pointer;
+}
+
+.activeListButton:active{
+  transform:scale(.985);
+}
+
+.activeListName{
+  color:#0f2944;
+  font-size:16px;
+  font-weight:900;
+  line-height:1;
+}
+
+.activeListMeta{
+  margin-top:5px;
+  color:#5d7693;
+  font-size:10.5px;
+  font-weight:800;
+  line-height:1;
+}
+
+.activeListChevron{
+  width:24px;
+  height:24px;
+  border-radius:9px;
+  background:#edf5ff;
+  border:1px solid #d4e2ee;
+  color:#1d68ea;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:17px;
+  font-weight:900;
+  line-height:1;
+  flex:0 0 24px;
+}
+
+.activeNumbersWrap{
+  min-height:0;
+  overflow:hidden;
+}
+
+.activeNumbers{
+  max-height:100%;
+  overflow:hidden;
+  align-content:flex-start;
+}
+
+.divider{
+  height:1px;
+  background:#d9e5ef;
+}
+
+.quickHeader{
+  height:16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.quickTitle{
+  color:#375977;
+  font-size:10px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.45px;
+}
+
+.quickHint{
+  color:#7b8fa4;
+  font-size:9.5px;
+  font-weight:800;
+}
+
+.quickPreview{
+  min-height:0;
+  overflow:hidden;
+  align-content:flex-start;
+}

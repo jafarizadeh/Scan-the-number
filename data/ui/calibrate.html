@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>Tapper Calibration</title>
+  <style>
+    :root{
+      --bg:#eef6fb;
+      --card:#ffffff;
+      --text:#19324a;
+      --muted:#6b8298;
+      --line:#d4e2ee;
+      --blue:#2f80ed;
+      --danger:#d64545;
+      --ok:#1d9b68;
+      --shadow:0 10px 28px rgba(31,64,98,.10);
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      overflow:hidden;
+    }
+
+    .page{
+      width:100vw;
+      height:100vh;
+      padding:14px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .topbar{
+      height:54px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .titleBlock{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+
+    .title{
+      font-size:22px;
+      font-weight:950;
+      letter-spacing:-.5px;
+    }
+
+    .subtitle{
+      font-size:12px;
+      font-weight:800;
+      color:var(--muted);
+    }
+
+    .backBtn{
+      height:42px;
+      border:0;
+      border-radius:14px;
+      padding:0 16px;
+      font-size:14px;
+      font-weight:900;
+      color:white;
+      background:#315b7c;
+      box-shadow:var(--shadow);
+    }
+
+    .grid{
+      flex:1;
+      min-height:0;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:22px;
+      box-shadow:var(--shadow);
+      padding:14px;
+      min-height:0;
+      overflow:hidden;
+    }
+
+    .cardTitle{
+      font-size:13px;
+      font-weight:950;
+      color:#375977;
+      text-transform:uppercase;
+      letter-spacing:.7px;
+      margin-bottom:12px;
+    }
+
+    .field{
+      margin-bottom:12px;
+    }
+
+    .field label{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      font-size:13px;
+      font-weight:900;
+      margin-bottom:6px;
+    }
+
+    .value{
+      color:var(--blue);
+      font-variant-numeric:tabular-nums;
+    }
+
+    input[type="range"]{
+      width:100%;
+    }
+
+    .numberRow{
+      display:grid;
+      grid-template-columns:48px 1fr 48px;
+      gap:8px;
+      align-items:center;
+    }
+
+    .smallBtn{
+      height:38px;
+      border:0;
+      border-radius:12px;
+      font-size:20px;
+      font-weight:950;
+      color:#24455f;
+      background:#e7f1f8;
+    }
+
+    .numInput{
+      width:100%;
+      height:38px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      text-align:center;
+      font-size:17px;
+      font-weight:950;
+      color:var(--text);
+      background:#fbfdff;
+    }
+
+    .actions{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:8px;
+    }
+
+    .actionBtn{
+      height:48px;
+      border:0;
+      border-radius:16px;
+      font-size:15px;
+      font-weight:950;
+      color:white;
+      background:var(--blue);
+      box-shadow:0 8px 18px rgba(47,128,237,.22);
+    }
+
+    .actionBtn.secondary{
+      background:#315b7c;
+    }
+
+    .actionBtn.safe{
+      background:var(--ok);
+    }
+
+    .actionBtn.danger{
+      background:var(--danger);
+    }
+
+    .actionBtn:active,
+    .smallBtn:active,
+    .backBtn:active{
+      transform:translateY(1px);
+      opacity:.9;
+    }
+
+    .hint{
+      margin-top:10px;
+      border-radius:16px;
+      background:#f2f8fc;
+      border:1px solid #d9e8f2;
+      padding:10px;
+      font-size:12px;
+      line-height:1.45;
+      font-weight:750;
+      color:#567085;
+    }
+
+    .log{
+      height:100%;
+      overflow:auto;
+      background:#0f1720;
+      color:#d7f7ff;
+      border-radius:16px;
+      padding:10px;
+      font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+      font-size:12px;
+      line-height:1.45;
+      white-space:pre-wrap;
+    }
+
+    .statusLine{
+      margin-bottom:10px;
+      padding:10px;
+      border-radius:16px;
+      background:#f7fbfe;
+      border:1px solid var(--line);
+      font-size:12px;
+      font-weight:850;
+      color:#4f6b82;
+    }
+
+    @media (max-width:760px){
+      body{overflow:auto}
+      .page{height:auto; min-height:100vh}
+      .grid{grid-template-columns:1fr}
+      .log{height:260px}
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <div class="titleBlock">
+        <div class="title">Tapper Calibration</div>
+        <div class="subtitle">GP2 servo · GP0 buzzer · safe microsecond control</div>
+      </div>
+      <button class="backBtn" onclick="location.href='/?v=calibration-back'">Back</button>
+    </div>
+
+    <div class="grid">
+      <section class="card">
+        <div class="cardTitle">Servo Position</div>
+
+        <div class="field">
+          <label>
+            <span>Up position</span>
+            <span class="value"><span id="upVal">1000</span> µs</span>
+          </label>
+          <div class="numberRow">
+            <button class="smallBtn" data-step="upUs:-25">−</button>
+            <input id="upUs" class="numInput" type="number" min="800" max="1400" step="25" value="1000">
+            <button class="smallBtn" data-step="upUs:25">+</button>
+          </div>
+          <input id="upRange" type="range" min="800" max="1400" step="25" value="1000">
+        </div>
+
+        <div class="field">
+          <label>
+            <span>Tap position</span>
+            <span class="value"><span id="tapVal">1200</span> µs</span>
+          </label>
+          <div class="numberRow">
+            <button class="smallBtn" data-step="tapUs:-25">−</button>
+            <input id="tapUs" class="numInput" type="number" min="900" max="1600" step="25" value="1200">
+            <button class="smallBtn" data-step="tapUs:25">+</button>
+          </div>
+          <input id="tapRange" type="range" min="900" max="1600" step="25" value="1200">
+        </div>
+
+        <div class="field">
+          <label>
+            <span>Hold time</span>
+            <span class="value"><span id="holdVal">200</span> ms</span>
+          </label>
+          <div class="numberRow">
+            <button class="smallBtn" data-step="holdMs:-50">−</button>
+            <input id="holdMs" class="numInput" type="number" min="50" max="700" step="50" value="200">
+            <button class="smallBtn" data-step="holdMs:50">+</button>
+          </div>
+          <input id="holdRange" type="range" min="50" max="700" step="50" value="200">
+        </div>
+
+        <div class="actions">
+          <button class="actionBtn secondary" id="moveUpBtn">Move Up</button>
+          <button class="actionBtn secondary" id="moveTapBtn">Move To Tap</button>
+          <button class="actionBtn" id="testTapBtn">Test Tap</button>
+          <button class="actionBtn safe" id="saveBtn">Save</button>
+          <button class="actionBtn secondary" id="buzzBtn">Test Buzzer</button>
+          <button class="actionBtn danger" id="offBtn">Off / Safe</button>
+        </div>
+
+        <div class="hint">
+          Start with Tap position around 1100–1200 µs. Increase slowly by 25 µs.
+          If the screen bends or pressure is high, reduce the value immediately.
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="cardTitle">Status & Logs</div>
+        <div id="statusLine" class="statusLine">Loading...</div>
+        <pre id="log" class="log"></pre>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    const fields = {
+      upUs: $("upUs"),
+      tapUs: $("tapUs"),
+      holdMs: $("holdMs"),
+      upRange: $("upRange"),
+      tapRange: $("tapRange"),
+      holdRange: $("holdRange"),
+    };
+
+    function clamp(n, min, max){
+      return Math.max(min, Math.min(max, Number(n)));
+    }
+
+    function values(){
+      return {
+        upUs: clamp(fields.upUs.value, 800, 1400),
+        tapUs: clamp(fields.tapUs.value, 900, 1600),
+        holdMs: clamp(fields.holdMs.value, 50, 700),
+      };
+    }
+
+    function sync(){
+      const v = values();
+
+      fields.upUs.value = v.upUs;
+      fields.tapUs.value = v.tapUs;
+      fields.holdMs.value = v.holdMs;
+
+      fields.upRange.value = v.upUs;
+      fields.tapRange.value = v.tapUs;
+      fields.holdRange.value = v.holdMs;
+
+      $("upVal").textContent = v.upUs;
+      $("tapVal").textContent = v.tapUs;
+      $("holdVal").textContent = v.holdMs;
+    }
+
+    function log(msg, data){
+      const box = $("log");
+      const t = new Date().toLocaleTimeString();
+      let text = `[${t}] ${msg}`;
+      if(data !== undefined){
+        text += "\n" + JSON.stringify(data, null, 2);
+      }
+      box.textContent = text + "\n\n" + box.textContent;
+    }
+
+    async function post(url, body){
+      const res = await fetch(url, {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(body || {})
+      });
+      const data = await res.json();
+      if(!res.ok || data.ok === false){
+        throw data;
+      }
+      return data;
+    }
+
+    async function loadStatus(){
+      try{
+        const res = await fetch("/api/calibration/status");
+        const data = await res.json();
+
+        if(data.config){
+          fields.upUs.value = data.config.upUs ?? 1000;
+          fields.tapUs.value = data.config.tapUs ?? 1200;
+          fields.holdMs.value = data.config.holdMs ?? 200;
+          sync();
+        }
+
+        $("statusLine").textContent = data.pico?.ok
+          ? "Pico connected. Calibration ready."
+          : "Calibration page loaded. Pico status unavailable.";
+
+        log("STATUS", data);
+      }catch(err){
+        $("statusLine").textContent = "Status error";
+        log("STATUS ERROR", err);
+      }
+    }
+
+    async function sendServo(command, extra){
+      sync();
+      const v = values();
+      const body = Object.assign({command, ...v}, extra || {});
+      log("SEND " + command, body);
+      const data = await post("/api/calibration/servo", body);
+      log("PICO RESULT", data);
+      return data;
+    }
+
+    $("moveUpBtn").onclick = async () => {
+      try{ await sendServo("up"); }catch(e){ log("ERROR", e); }
+    };
+
+    $("moveTapBtn").onclick = async () => {
+      try{
+        const v = values();
+        await sendServo("move", {positionUs:v.tapUs});
+      }catch(e){ log("ERROR", e); }
+    };
+
+    $("testTapBtn").onclick = async () => {
+      try{ await sendServo("tap"); }catch(e){ log("ERROR", e); }
+    };
+
+    $("buzzBtn").onclick = async () => {
+      try{ await sendServo("buzz", {buzzMs:300}); }catch(e){ log("ERROR", e); }
+    };
+
+    $("offBtn").onclick = async () => {
+      try{ await sendServo("off"); }catch(e){ log("ERROR", e); }
+    };
+
+    $("saveBtn").onclick = async () => {
+      try{
+        sync();
+        const v = values();
+        log("SAVE", v);
+        const data = await post("/api/calibration/save", v);
+        $("statusLine").textContent = "Saved. Future triggers will use these values.";
+        log("SAVE RESULT", data);
+      }catch(e){
+        $("statusLine").textContent = "Save failed.";
+        log("SAVE ERROR", e);
+      }
+    };
+
+    document.querySelectorAll("[data-step]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const [id, deltaRaw] = btn.dataset.step.split(":");
+        const delta = Number(deltaRaw);
+        const el = fields[id];
+        el.value = Number(el.value) + delta;
+        sync();
+      });
+    });
+
+    fields.upUs.addEventListener("input", sync);
+    fields.tapUs.addEventListener("input", sync);
+    fields.holdMs.addEventListener("input", sync);
+
+    fields.upRange.addEventListener("input", () => {
+      fields.upUs.value = fields.upRange.value;
+      sync();
+    });
+
+    fields.tapRange.addEventListener("input", () => {
+      fields.tapUs.value = fields.tapRange.value;
+      sync();
+    });
+
+    fields.holdRange.addEventListener("input", () => {
+      fields.holdMs.value = fields.holdRange.value;
+      sync();
+    });
+
+    sync();
+    loadStatus();
+  </script>
+  <script src="/js/calibration-button.js?v=calib-btn-2"></script>
+</body>
+</html>

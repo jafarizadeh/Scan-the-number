@@ -1,0 +1,4 @@
+round_index,timestamp,number,score,margin,agreement,votes,total_frames,reason,roi_path,frame_path
+1,20260706_130711_135852,36,0.9622,0.9575,0.9444,17,18,max_capture_frames,data/evidence/cnn_round_000001_36_roi_20260706_130711_135852.png,data/evidence/cnn_round_000001_36_frame_20260706_130711_135852.png
+2,20260706_130718_566887,12,0.9357,0.9279,0.9375,15,16,result_ended,data/evidence/cnn_round_000002_12_roi_20260706_130718_566887.png,data/evidence/cnn_round_000002_12_frame_20260706_130718_566887.png
+3,20260706_130731_711729,3,0.9758,0.9743,0.9333,14,15,result_ended,data/evidence/cnn_round_000003_3_roi_20260706_130731_711729.png,data/evidence/cnn_round_000003_3_frame_20260706_130731_711729.png

@@ -1,0 +1,88 @@
+.controlsCol{
+  padding:0 9px 9px 9px;
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+}
+
+.toggleCard{
+  height:42px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:var(--soft);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 9px;
+}
+
+.toggleLeft{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:14px;
+  font-weight:900;
+}
+
+.switch{
+  width:45px;
+  height:25px;
+  border-radius:18px;
+  background:#b7c8d9;
+  position:relative;
+  cursor:pointer;
+  flex:0 0 auto;
+}
+
+.switch:after{
+  content:"";
+  position:absolute;
+  width:21px;
+  height:21px;
+  top:2px;
+  left:2px;
+  border-radius:50%;
+  background:#fff;
+  box-shadow:0 2px 6px rgba(0,0,0,.22);
+  transition:.16s;
+}
+
+.switch.on{
+  background:var(--green);
+}
+
+.switch.on:after{
+  left:22px;
+}
+
+.statusCard{
+  flex:1;
+  min-height:55px;
+  border:1px solid var(--line);
+  border-radius:15px;
+  background:var(--soft);
+  padding:9px;
+}
+
+.statusLine{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  color:#355579;
+  font-size:11px;
+  font-weight:900;
+  text-transform:uppercase;
+}
+
+.statusValue{
+  margin-top:8px;
+  font-size:18px;
+  line-height:1;
+  font-weight:900;
+}
+
+.statusSub{
+  margin-top:4px;
+  color:var(--muted);
+  font-size:11px;
+}

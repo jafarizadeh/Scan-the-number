@@ -1,0 +1,2 @@
+round_index,timestamp,number,confidence,agreement,score,margin,evidence_frame,evidence_roi
+1,20260705_201814_831428,32,1.0,1.0,0.8646,0.1037,data/evidence/round_000001_32_frame_20260705_201814_831428.png,data/evidence/round_000001_32_roi_20260705_201814_831428.png

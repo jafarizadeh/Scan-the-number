@@ -1,0 +1,66 @@
+{
+  "selectedListId": "list-1",
+  "lists": [
+    {
+      "id": "list-1",
+      "name": "List 1",
+      "numbers": [
+        0,
+        8,
+        10,
+        11,
+        12,
+        13,
+        18,
+        20,
+        24,
+        27,
+        29,
+        35,
+        36
+      ]
+    },
+    {
+      "id": "list-2",
+      "name": "List 2",
+      "numbers": [
+        2,
+        3,
+        7,
+        8,
+        9,
+        10,
+        11,
+        16,
+        17,
+        24,
+        25
+      ]
+    },
+    {
+      "id": "list-3",
+      "name": "List 3",
+      "numbers": []
+    }
+  ],
+  "hardware": {
+    "dryRun": false,
+    "hardwareMode": "pico_serial",
+    "picoPort": "auto",
+    "picoBaud": 115200,
+    "buzzerEnabled": true,
+    "buzzerPin": 14,
+    "buzzerDurationMs": 350,
+    "buzzerDelayMs": 0,
+    "actuatorEnabled": true,
+    "actuatorPin": 15,
+    "actuatorDelayMs": 0,
+    "actuatorOutPercent": 35,
+    "actuatorHoldMs": 1000,
+    "actuatorReturnMs": 250,
+    "servoMinPulseMs": 1.0,
+    "servoMaxPulseMs": 2.4,
+    "actionCooldownMs": 1200,
+    "allowOverlap": false
+  }
+}

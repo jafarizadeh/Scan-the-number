@@ -1,0 +1,10 @@
+round_index,timestamp,number,score,margin,agreement,usable_votes,total_votes,reason,roi_path,frame_path
+1,20260705_213103_887004,11,0.8446,0.1757,1.0,10,10,digit_template_agree,data/evidence/round_000001_11_roi_20260705_213103_887004.png,data/evidence/round_000001_11_frame_20260705_213103_887004.png
+2,20260705_213143_867868,31,0.8573,0.1225,1.0,10,10,digit_template_agree,data/evidence/round_000002_31_roi_20260705_213143_867868.png,data/evidence/round_000002_31_frame_20260705_213143_867868.png
+3,20260705_213333_051395,4,0.8523,0.142,1.0,10,10,digit_template_agree,data/evidence/round_000003_4_roi_20260705_213333_051395.png,data/evidence/round_000003_4_frame_20260705_213333_051395.png
+4,20260705_213359_181529,32,0.8484,0.0977,1.0,10,10,digit_template_agree,data/evidence/round_000004_32_roi_20260705_213359_181529.png,data/evidence/round_000004_32_frame_20260705_213359_181529.png
+5,20260705_213521_012781,4,0.8532,0.1431,1.0,10,10,digit_template_agree,data/evidence/round_000005_4_roi_20260705_213521_012781.png,data/evidence/round_000005_4_frame_20260705_213521_012781.png
+6,20260705_213728_796075,16,0.8216,0.0886,1.0,10,10,digit_template_agree,data/evidence/round_000006_16_roi_20260705_213728_796075.png,data/evidence/round_000006_16_frame_20260705_213728_796075.png
+7,20260705_213820_586556,12,0.8225,0.0857,1.0,10,10,digit_template_agree,data/evidence/round_000007_12_roi_20260705_213820_586556.png,data/evidence/round_000007_12_frame_20260705_213820_586556.png
+8,20260705_213903_214699,17,0.8324,0.1245,1.0,10,10,digit_template_agree,data/evidence/round_000008_17_roi_20260705_213903_214699.png,data/evidence/round_000008_17_frame_20260705_213903_214699.png
+9,20260705_213947_365955,33,0.8638,0.0852,1.0,11,11,digit_template_agree,data/evidence/round_000009_33_roi_20260705_213947_365955.png,data/evidence/round_000009_33_frame_20260705_213947_365955.png

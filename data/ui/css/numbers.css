@@ -1,0 +1,47 @@
+.numberRow{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+}
+
+.numChip{
+  min-width:36px;
+  height:29px;
+  padding:0 8px;
+  border-radius:9px;
+  color:#fff;
+  font-size:14px;
+  font-weight:900;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:2px solid rgba(255,255,255,.55);
+  box-shadow:0 3px 8px rgba(20,40,65,.14), inset 0 1px 0 rgba(255,255,255,.22);
+  position:relative;
+}
+
+.numRed{
+  background:linear-gradient(180deg,#f24a56,#dc303d);
+}
+
+.numBlack{
+  background:linear-gradient(180deg,#263449,#101923);
+}
+
+.numGreen{
+  background:linear-gradient(180deg,#34cc76,#1bae61);
+}
+
+.numMatch{
+  outline:3px solid var(--gold);
+  box-shadow:0 0 0 4px rgba(255,204,51,.22);
+}
+
+.numMatch:after{
+  content:"★";
+  position:absolute;
+  top:-8px;
+  right:1px;
+  color:var(--gold);
+  font-size:11px;
+}
