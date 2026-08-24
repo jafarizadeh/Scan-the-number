@@ -4,49 +4,58 @@ import { setSwitch } from "../utils.js";
 
 export function controlsHTML(){
   return `
-    <section class="card controlsCol">
-      <div class="cardTitle">Controls</div>
+<section class="controlsCol">
+  <div class="cardTitle">Controls</div>
 
-      <div class="toggleCard">
-        <div class="toggleLeft">${icons.camera} Camera</div>
-        <div id="cameraSwitch" class="switch on"></div>
-      </div>
+  <div id="cameraToggle" class="toggleCard">
+    <div class="toggleLeft">${icons.camera} Camera</div>
+    <div id="cameraSwitch" class="switch on"></div>
+  </div>
 
-      <div class="toggleCard">
-        <div class="toggleLeft">${icons.sound} Sound</div>
-        <div id="soundSwitch" class="switch"></div>
-      </div>
+  <div id="soundToggle" class="toggleCard">
+    <div class="toggleLeft">${icons.sound} Sound</div>
+    <div id="soundSwitch" class="switch"></div>
+  </div>
 
-      <div class="toggleCard">
-        <div class="toggleLeft">${icons.arm} Tapper</div>
-        <div id="armSwitch" class="switch"></div>
-      </div>
+  <div id="armToggle" class="toggleCard">
+    <div class="toggleLeft">${icons.arm} Tapper</div>
+    <div id="armSwitch" class="switch"></div>
+  </div>
 
-      <div class="statusCard">
-        <div class="statusLine"><span class="statusDot" id="statusDot"></span>Status</div>
-        <div id="statusValue" class="statusValue">STOPPED</div>
-        <div id="statusSub" class="statusSub">System is stopped</div>
-      </div>
-    </section>
+  <div id="doubleMatchToggle" class="toggleCard">
+    <div class="toggleLeft">Double Match</div>
+    <div id="doubleMatchSwitch" class="switch"></div>
+  </div>
+</section>
   `;
 }
 
 export function bindControls(actions){
-  document.getElementById("cameraSwitch").onclick = actions.toggleCamera;
-  document.getElementById("soundSwitch").onclick = actions.toggleSound;
-  document.getElementById("armSwitch").onclick = actions.toggleArm;
+  const bindToggle = (id, action) => {
+    const element = document.getElementById(id);
+    if(!element) return;
+
+    element.addEventListener("pointerup", event => {
+      event.preventDefault();
+      event.stopPropagation();
+      action();
+    });
+  };
+
+  bindToggle("cameraToggle", actions.toggleCamera);
+  bindToggle("soundToggle", actions.toggleSound);
+  bindToggle("armToggle", actions.toggleArm);
+  bindToggle("doubleMatchToggle", actions.toggleDoubleMatch);
 }
 
 export function renderControls(){
-  const scanning = !!state.liveStatus?.monitoring;
   const hw = state.appSettings?.hardware || {};
 
   setSwitch("cameraSwitch", state.cameraOn);
   setSwitch("soundSwitch", !!hw.buzzerEnabled);
   setSwitch("armSwitch", !!hw.actuatorEnabled);
-
-  document.getElementById("statusValue").textContent = scanning ? "SCANNING" : "STOPPED";
-  document.getElementById("statusValue").style.color = scanning ? "#1a9f54" : "#db3242";
-  document.getElementById("statusSub").textContent = scanning ? "System is active" : "System is stopped";
-  document.getElementById("statusDot").style.background = scanning ? "#25bf6b" : "#9aacbf";
+  setSwitch(
+    "doubleMatchSwitch",
+    !!state.appSettings?.doubleMatchEnabled
+  );
 }

@@ -2,11 +2,11 @@ import { getJSON, postJSON } from "./api.js";
 import { state, editingList, cloneSettings, settingsSource } from "./state.js";
 
 import { headerHTML, bindHeader, renderHeader } from "./components/header.js";
-import { controlsHTML, bindControls, renderControls } from "./components/controls.js";
+import { controlsHTML, bindControls, renderControls } from "./components/controls.js?v=touch-controls-2";
 import { cameraHTML, bindCamera, renderCamera } from "./components/camera.js";
 import { infoPanelHTML, renderInfoPanel } from "./components/infoPanel.js";
 import { activeListHTML, bindActiveList, renderActiveList } from "./components/activeList.js";
-import { historyHTML, renderHistory, enableHistoryDrag } from "./components/history.js";
+import { historyHTML, bindHistory, renderHistory, enableHistoryDrag } from "./components/history.js?v=history-ui-9";
 import { listModalHTML, bindListModal, renderListModal, openListModal, closeListModal } from "./components/listModal.js";
 import { matchModalHTML, bindMatchModal, showMatchIfNeeded } from "./components/matchModal.js";
 import { settingsPageHTML, bindSettingsPage, renderSettingsPage, showSettingsView, showMainView, setSettingsMessage } from "./components/settingsPage.js";
@@ -53,8 +53,26 @@ const actions = {
     renderAll();
   },
 
+  async toggleDoubleMatch(){
+    if(!state.appSettings) return;
+
+    const enabled = !state.appSettings.doubleMatchEnabled;
+
+    const result = await postJSON("/api/double-match", {
+      enabled
+    });
+
+    state.appSettings.doubleMatchEnabled = !!result.doubleMatchEnabled;
+    renderAll();
+  },
+
   toggleCamera(){
     state.cameraOn = !state.cameraOn;
+    renderAll();
+  },
+
+  async clearHistory(){
+    state.liveStatus = await postJSON("/api/history/clear", {});
     renderAll();
   },
 
@@ -267,6 +285,7 @@ function bindAll(){
   bindSettingsPage(actions);
   bindMatchModal();
   bindShutdownModal(actions);
+  bindHistory(actions);
   enableHistoryDrag();
 }
 

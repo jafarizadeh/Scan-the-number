@@ -132,3 +132,31 @@
   font-weight:700;
   white-space:nowrap;
 }
+
+/* Touch-friendly control toggles */
+.toggleCard {
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.toggleCard:active {
+  transform: scale(.985);
+}
+
+/* Four-row controls layout */
+.controlsCol{
+  grid-template-rows:17px repeat(4,34px);
+  align-content:start;
+}
+
+#doubleMatchToggle{
+  padding-left:7px;
+  padding-right:7px;
+}
+
+#doubleMatchToggle .toggleLeft{
+  font-size:11.5px;
+  letter-spacing:-.25px;
+}

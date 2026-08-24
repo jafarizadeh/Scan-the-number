@@ -25,6 +25,7 @@ DEFAULT_TARGET_LISTS = {
     "lists": [
         {"id": "list-1", "name": "List 1", "numbers": [0, 8, 10, 11, 13, 20, 29, 35, 36]},
     ],
+    "doubleMatchEnabled": False,
     "hardware": dict(DEFAULT_HARDWARE_CONFIG),
 }
 
@@ -80,6 +81,7 @@ class AppStore:
         except Exception as exc:
             print(f"[APP] settings load failed: {exc}")
         clean = clean_lists(data)
+        clean["doubleMatchEnabled"] = bool(data.get("doubleMatchEnabled", False))
         clean["hardware"] = clean_hardware_config(data.get("hardware", {}))
         return clean
 
@@ -98,6 +100,12 @@ class AppStore:
             self.data["selectedListId"] = clean["selectedListId"]
             self.save()
             return json.loads(json.dumps(self.data))
+
+    def update_double_match(self, enabled):
+        with self.lock:
+            self.data["doubleMatchEnabled"] = bool(enabled)
+            self.save()
+            return bool(self.data["doubleMatchEnabled"])
 
     def update_hardware(self, payload):
         clean = clean_hardware_config(payload)
@@ -137,6 +145,16 @@ class FinalVisionHub:
         self.thread = None
 
         self.last_output_number = None
+        self.previous_pair_number = None
+
+        # Scanner result lock.
+        # After recording a result, keep the scanner locked until a
+        # DIFFERENT number passes the full consecutive-frame validation.
+        self.scan_locked = False
+        self.unlock_gap_streak = 0
+        self.unlock_change_label = None
+        self.unlock_change_streak = 0
+
         self.candidate_label = None
         self.candidate_predictions = []
         self.candidate_streak = 0
@@ -190,6 +208,13 @@ class FinalVisionHub:
             self.monitoring = True
             self.session_id = f"session-{datetime.now().strftime('%Y%m%d_%H%M%S')}"
             self.last_output_number = None
+            self.previous_pair_number = None
+
+            self.scan_locked = False
+            self.unlock_gap_streak = 0
+            self.unlock_change_label = None
+            self.unlock_change_streak = 0
+
             self.reset_candidate()
             self.latest_match = None
         return self.public_status()
@@ -233,9 +258,41 @@ class FinalVisionHub:
         is_match = int(number) in target_set
         roi_path = self.save_roi(number)
         event_id = f"ev-{uuid.uuid4().hex[:10]}"
+        double_match_enabled = bool(
+            self.store.get().get("doubleMatchEnabled", False)
+        )
+
+        previous_number = self.previous_pair_number
+        previous_is_match = (
+            previous_number is not None and
+            int(previous_number) in target_set
+        )
+
         action_result = {"accepted": False, "reason": "not_match"}
-        if is_match:
-            action_result = self.actions.trigger_async(number=number, list_name=selected.get("name", ""), reason="number_in_selected_list")
+
+        if double_match_enabled:
+            if is_match and previous_is_match:
+                action_result = self.actions.trigger_async(
+                    number=number,
+                    list_name=selected.get("name", ""),
+                    reason="two_consecutive_numbers_in_selected_list",
+                )
+            elif is_match:
+                action_result = {
+                    "accepted": False,
+                    "reason": "waiting_for_second_match",
+                }
+            else:
+                action_result = {
+                    "accepted": False,
+                    "reason": "double_match_sequence_broken",
+                }
+        elif is_match:
+            action_result = self.actions.trigger_async(
+                number=number,
+                list_name=selected.get("name", ""),
+                reason="number_in_selected_list",
+            )
         event = {
             "id": event_id,
             "timestamp": now_iso(),
@@ -252,7 +309,16 @@ class FinalVisionHub:
         with self.lock:
             self.history.appendleft(event)
             self.events.appendleft(event)
+            self.previous_pair_number = int(number)
             self.last_output_number = int(number)
+
+            # Prevent the same visible roulette result from being recorded
+            # repeatedly on consecutive camera frames.
+            self.scan_locked = True
+            self.unlock_gap_streak = 0
+            self.unlock_change_label = None
+            self.unlock_change_streak = 0
+
             if is_match:
                 self.latest_match = event
         with self.event_log.open("a", newline="", encoding="utf-8") as f:
@@ -261,17 +327,30 @@ class FinalVisionHub:
 
     def finalize_candidate(self):
         preds = list(self.candidate_predictions)
-        if not preds:
+
+        if not preds or self.candidate_label is None:
             self.reset_candidate()
             return None
+
         label = int(self.candidate_label)
-        avg_score = sum(float(p["score"]) for p in preds) / len(preds)
-        avg_margin = sum(float(p["margin"]) for p in preds) / len(preds)
-        cfg = self.cfg.get("final_app", {})
-        if avg_score >= float(cfg.get("min_confirm_score", 0.85)) and avg_margin >= float(cfg.get("min_confirm_margin", 0.20)):
-            event = self.record_number(label, avg_score, avg_margin)
-        else:
-            event = None
+
+        avg_score = (
+            sum(float(p["score"]) for p in preds) / len(preds)
+        )
+        avg_margin = (
+            sum(float(p["margin"]) for p in preds) / len(preds)
+        )
+
+        # Every prediction stored in candidate_predictions has already
+        # passed the per-frame score/margin gate. Reaching this function
+        # therefore means that the same label was observed for the
+        # required number of consecutive valid frames.
+        event = self.record_number(
+            label,
+            avg_score,
+            avg_margin,
+        )
+
         self.reset_candidate()
         return event
 
@@ -279,9 +358,114 @@ class FinalVisionHub:
         fps = int(self.cfg["camera"].get("fps", 15))
         delay = 1.0 / max(1, fps)
         cfg = self.cfg.get("final_app", {})
-        min_stable_frames = int(cfg.get("min_stable_frames", 2))
-        min_live_score = float(cfg.get("min_live_score", 0.70))
-        min_live_margin = float(cfg.get("min_live_margin", 0.10))
+        required_consecutive_frames = int(
+            cfg.get(
+                "required_consecutive_frames",
+                cfg.get("min_stable_frames", 5),
+            )
+        )
+
+        min_frame_score = float(
+            cfg.get(
+                "min_frame_score",
+                cfg.get("min_live_score", 0.30),
+            )
+        )
+
+        min_frame_margin = float(
+            cfg.get(
+                "min_frame_margin",
+                cfg.get("min_live_margin", 0.05),
+            )
+        )
+
+        # --------------------------------------------------
+        # Roulette background color hard-filter.
+        #
+        # GREEN -> only 0
+        # RED   -> only standard red roulette numbers
+        # BLACK -> only standard black roulette numbers
+        #
+        # Color limits the allowed CNN labels. The number
+        # itself is still selected from CNN Top-K results.
+        # --------------------------------------------------
+
+        color_filter_enabled = bool(
+            cfg.get("roulette_color_filter_enabled", True)
+        )
+
+        green_h_min = int(cfg.get("green_h_min", 35))
+        green_h_max = int(cfg.get("green_h_max", 95))
+        green_s_min = int(cfg.get("green_s_min", 55))
+        green_v_min = int(cfg.get("green_v_min", 35))
+        green_ratio_min = float(
+            cfg.get("green_ratio_min", 0.20)
+        )
+
+        red_h1_min = int(cfg.get("red_h1_min", 0))
+        red_h1_max = int(cfg.get("red_h1_max", 12))
+        red_h2_min = int(cfg.get("red_h2_min", 165))
+        red_h2_max = int(cfg.get("red_h2_max", 179))
+        red_s_min = int(cfg.get("red_s_min", 60))
+        red_v_min = int(cfg.get("red_v_min", 35))
+        red_ratio_min = float(
+            cfg.get("red_ratio_min", 0.20)
+        )
+
+        black_v_max = int(
+            cfg.get("black_v_max", 85)
+        )
+        black_ratio_min = float(
+            cfg.get("black_ratio_min", 0.20)
+        )
+
+        GREEN_NUMBERS = {0}
+
+        RED_NUMBERS = {
+            1, 3, 5, 7, 9,
+            12, 14, 16, 18, 19,
+            21, 23, 25, 27,
+            30, 32, 34, 36,
+        }
+
+        BLACK_NUMBERS = {
+            2, 4, 6, 8, 10, 11,
+            13, 15, 17, 20, 22,
+            24, 26, 28, 29, 31,
+            33, 35,
+        }
+
+        # Re-arm protection after a confirmed roulette result.
+        #
+        # At 15 FPS, 3 low-signal frames are roughly 0.2 seconds.
+        # A different label must also remain stable for several frames
+        # before it is allowed to release the previous-result lock.
+        unlock_low_signal_frames = int(
+            cfg.get("unlock_low_signal_frames", 3)
+        )
+        change_stable_frames = int(
+            cfg.get("change_stable_frames", 3)
+        )
+        change_min_score = float(
+            cfg.get("change_min_score", min_frame_score)
+        )
+        change_min_margin = float(
+            cfg.get("change_min_margin", min_frame_margin)
+        )
+
+        # A LOW_SIGNAL frame may still contain the dimmed previous result.
+        # Do not interpret that as a real inter-result gap while the CNN
+        # still recognizes the previous number with strong confidence.
+        same_number_hold_score = float(
+            cfg.get("same_number_hold_score", 0.80)
+        )
+        same_number_hold_margin = float(
+            cfg.get("same_number_hold_margin", 0.50)
+        )
+        same_number_hold_std_min = float(
+            cfg.get("same_number_hold_std_min", 10.0)
+        )
+
         while self.running:
             frame = self.camera.read()
             if frame is None:
@@ -294,27 +478,994 @@ class FinalVisionHub:
             event = None
             if self.monitoring:
                 try:
-                    decision = self.model.predict(roi)
-                    label = int(decision["label"])
-                    score = float(decision["score"])
-                    margin = float(decision["margin"])
-                    self.latest_decision = decision
-                    usable = state == "RESULT_VISIBLE" and score >= min_live_score and margin >= min_live_margin
-                    if usable:
-                        if self.last_output_number is not None and label == int(self.last_output_number):
-                            self.reset_candidate()
-                        else:
-                            if self.candidate_label == label:
-                                self.candidate_streak += 1
-                                self.candidate_predictions.append(decision)
-                            else:
-                                self.candidate_label = label
-                                self.candidate_streak = 1
-                                self.candidate_predictions = [decision]
-                            if self.candidate_streak >= min_stable_frames:
-                                event = self.finalize_candidate()
-                    else:
+                    # ==================================================
+                    # Five-frame parallel fusion
+                    #
+                    # Number recognition and background-color evidence
+                    # are collected from the SAME five frames.
+                    #
+                    # Color NEVER converts one CNN number into another.
+                    # It only validates the final CNN winner.
+                    #
+                    # GREEN is special because roulette zero is the only
+                    # green number.
+                    # ==================================================
+
+                    decision = dict(
+                        self.model.predict(roi)
+                    )
+
+                    raw_label = int(
+                        decision["label"]
+                    )
+                    raw_score = float(
+                        decision["score"]
+                    )
+                    raw_margin = float(
+                        decision["margin"]
+                    )
+
+                    # --------------------------------------------------
+                    # Color evidence
+                    #
+                    # Keep CNN input untouched. Calibration showed that
+                    # physical red is correctly interpreted when this ROI
+                    # is treated as RGB for HSV conversion.
+                    # --------------------------------------------------
+
+                    hsv = cv2.cvtColor(
+                        roi,
+                        cv2.COLOR_RGB2HSV,
+                    )
+
+                    green_mask = cv2.inRange(
+                        hsv,
+                        (
+                            green_h_min,
+                            green_s_min,
+                            green_v_min,
+                        ),
+                        (
+                            green_h_max,
+                            255,
+                            255,
+                        ),
+                    )
+
+                    red_mask_1 = cv2.inRange(
+                        hsv,
+                        (
+                            red_h1_min,
+                            red_s_min,
+                            red_v_min,
+                        ),
+                        (
+                            red_h1_max,
+                            255,
+                            255,
+                        ),
+                    )
+
+                    red_mask_2 = cv2.inRange(
+                        hsv,
+                        (
+                            red_h2_min,
+                            red_s_min,
+                            red_v_min,
+                        ),
+                        (
+                            red_h2_max,
+                            255,
+                            255,
+                        ),
+                    )
+
+                    red_mask = cv2.bitwise_or(
+                        red_mask_1,
+                        red_mask_2,
+                    )
+
+                    black_mask = cv2.inRange(
+                        hsv,
+                        (0, 0, 0),
+                        (179, 255, black_v_max),
+                    )
+
+                    green_ratio = (
+                        float(
+                            cv2.countNonZero(
+                                green_mask
+                            )
+                        )
+                        / float(green_mask.size)
+                    )
+
+                    red_ratio = (
+                        float(
+                            cv2.countNonZero(
+                                red_mask
+                            )
+                        )
+                        / float(red_mask.size)
+                    )
+
+                    black_ratio = (
+                        float(
+                            cv2.countNonZero(
+                                black_mask
+                            )
+                        )
+                        / float(black_mask.size)
+                    )
+
+                    fusion_frames = int(
+                        cfg.get(
+                            "fusion_window_frames",
+                            5,
+                        )
+                    )
+
+                    fusion_min_votes = int(
+                        cfg.get(
+                            "fusion_min_votes",
+                            3,
+                        )
+                    )
+
+                    fusion_min_weight_share = float(
+                        cfg.get(
+                            "fusion_min_weight_share",
+                            0.55,
+                        )
+                    )
+
+                    fusion_color_margin = float(
+                        cfg.get(
+                            "fusion_color_dominance_margin",
+                            0.04,
+                        )
+                    )
+
+                    uncertain_color_min_votes = int(
+                        cfg.get(
+                            "fusion_uncertain_color_min_votes",
+                            4,
+                        )
+                    )
+
+                    uncertain_color_min_score = float(
+                        cfg.get(
+                            "fusion_uncertain_color_min_score",
+                            0.45,
+                        )
+                    )
+
+                    # Per-frame semantic color is diagnostic only.
+                    # It does NOT change raw_label.
+                    background_color = "UNKNOWN"
+
+                    if (
+                        green_ratio >= green_ratio_min
+                        and green_ratio
+                            > red_ratio + fusion_color_margin
+                        and green_ratio
+                            > black_ratio + fusion_color_margin
+                    ):
+                        background_color = "GREEN"
+
+                    elif (
+                        red_ratio >= red_ratio_min
+                        and (
+                            red_ratio - black_ratio
+                        ) >= fusion_color_margin
+                    ):
+                        background_color = "RED"
+
+                    elif (
+                        black_ratio >= black_ratio_min
+                        and (
+                            black_ratio - red_ratio
+                        ) >= fusion_color_margin
+                    ):
+                        background_color = "BLACK"
+
+                    decision["raw_label"] = raw_label
+                    decision["raw_score"] = raw_score
+                    decision["raw_margin"] = raw_margin
+
+                    # Do NOT replace CNN label based on RED/BLACK.
+                    decision["label"] = raw_label
+                    decision["score"] = raw_score
+                    decision["margin"] = raw_margin
+
+                    decision["background_color"] = (
+                        background_color
+                    )
+                    decision["green_ratio"] = float(
+                        green_ratio
+                    )
+                    decision["red_ratio"] = float(
+                        red_ratio
+                    )
+                    decision["black_ratio"] = float(
+                        black_ratio
+                    )
+
+                    decision["zero_color_override"] = False
+                    decision["color_filter_blocked"] = False
+                    decision["color_compatible_top5"] = []
+
+                    decision["fusion_window_size"] = 0
+                    decision["fusion_complete"] = False
+                    decision["fusion_winner"] = None
+                    decision["fusion_vote_count"] = 0
+                    decision["fusion_weight_share"] = 0.0
+                    decision["fused_color"] = None
+                    decision["fusion_color_valid"] = None
+                    decision["fusion_reason"] = "collecting"
+
+                    # --------------------------------------------------
+                    # Zero -> fake 10 transition guard
+                    #
+                    # After a confirmed zero, the display sometimes dims
+                    # before the next roulette result. During that fade the
+                    # CNN may strongly predict 10 even though substantial
+                    # green evidence from the previous zero still remains.
+                    #
+                    # A real 10 has very little green evidence, so only the
+                    # specific combination:
+                    #
+                    #   previous confirmed result == 0
+                    #   raw CNN label == 10
+                    #   green ratio >= configured threshold
+                    #
+                    # is treated as the fading previous zero.
+                    #
+                    # The frame is ignored completely and does not consume
+                    # any position in the five-frame fusion window.
+                    # --------------------------------------------------
+
+                    # --------------------------------------------------
+                    # Round Boundary Detector
+                    #
+                    # A new roulette round is identified by the short,
+                    # almost completely black transition observed between
+                    # results.
+                    #
+                    # IMPORTANT:
+                    #   The next number is allowed to be IDENTICAL to the
+                    #   previous number.
+                    #
+                    # Example:
+                    #
+                    #       25 -> blackout -> 25
+                    #
+                    # becomes two independent roulette results.
+                    #
+                    # Time is only a safety guard. The visual blackout is
+                    # the primary round-boundary evidence.
+                    # --------------------------------------------------
+
+                    round_boundary_enabled = bool(
+                        cfg.get(
+                            "round_boundary_enabled",
+                            True,
+                        )
+                    )
+
+                    round_black_min = float(
+                        cfg.get(
+                            "round_boundary_black_min",
+                            0.98,
+                        )
+                    )
+
+                    round_red_max = float(
+                        cfg.get(
+                            "round_boundary_red_max",
+                            0.10,
+                        )
+                    )
+
+                    round_green_max = float(
+                        cfg.get(
+                            "round_boundary_green_max",
+                            0.10,
+                        )
+                    )
+
+                    round_raw_score_max = float(
+                        cfg.get(
+                            "round_boundary_raw_score_max",
+                            0.20,
+                        )
+                    )
+
+                    round_required_frames = int(
+                        cfg.get(
+                            "round_boundary_required_frames",
+                            3,
+                        )
+                    )
+
+                    round_min_seconds = float(
+                        cfg.get(
+                            "round_boundary_min_seconds_after_output",
+                            6.0,
+                        )
+                    )
+
+                    now_mono = time.monotonic()
+
+                    # Initialize persistent detector state lazily so this
+                    # patch does not require constructor changes.
+                    if not hasattr(
+                        self,
+                        "_round_boundary_streak",
+                    ):
+                        self._round_boundary_streak = 0
+
+                    if not hasattr(
+                        self,
+                        "_round_boundary_open",
+                    ):
+                        self._round_boundary_open = False
+
+                    if not hasattr(
+                        self,
+                        "_round_guard_last_registration_mono",
+                    ):
+                        self._round_guard_last_registration_mono = (
+                            now_mono
+                        )
+
+                    seconds_since_output = (
+                        now_mono
+                        - self._round_guard_last_registration_mono
+                    )
+
+                    strong_round_blackout = (
+                        round_boundary_enabled
+                        and self.last_output_number is not None
+                        and seconds_since_output
+                            >= round_min_seconds
+                        and black_ratio
+                            >= round_black_min
+                        and red_ratio
+                            <= round_red_max
+                        and green_ratio
+                            <= round_green_max
+                        and raw_score
+                            <= round_raw_score_max
+                    )
+
+                    # Every strong-blackout frame is held outside the
+                    # 5-frame number fusion window.
+                    round_boundary_hold = bool(
+                        strong_round_blackout
+                    )
+
+                    round_boundary_detected = False
+
+                    if (
+                        strong_round_blackout
+                        and not self._round_boundary_open
+                    ):
+                        self._round_boundary_streak += 1
+
+                    elif not strong_round_blackout:
+                        self._round_boundary_streak = 0
+
+                    if (
+                        not self._round_boundary_open
+                        and self._round_boundary_streak
+                            >= round_required_frames
+                    ):
+                        # A genuine new roulette round now exists.
+                        #
+                        # Unlock BEFORE the next visible result so the
+                        # next result may equal last_output_number.
+                        self.scan_locked = False
+
+                        self._round_boundary_open = True
+                        self._round_boundary_streak = 0
+
                         self.reset_candidate()
+
+                        round_boundary_detected = True
+
+                    decision[
+                        "round_boundary_strong_blackout"
+                    ] = bool(
+                        strong_round_blackout
+                    )
+
+                    decision[
+                        "round_boundary_detected"
+                    ] = bool(
+                        round_boundary_detected
+                    )
+
+                    decision[
+                        "round_boundary_open"
+                    ] = bool(
+                        self._round_boundary_open
+                    )
+
+                    decision[
+                        "round_boundary_streak"
+                    ] = int(
+                        self._round_boundary_streak
+                    )
+
+                    decision[
+                        "round_seconds_since_output"
+                    ] = float(
+                        seconds_since_output
+                    )
+
+                    zero_transition_10_ignored = (
+                        bool(
+                            cfg.get(
+                                "zero_transition_10_guard_enabled",
+                                True,
+                            )
+                        )
+                        and self.last_output_number is not None
+                        and int(self.last_output_number) == 0
+                        and raw_label == 10
+                        and green_ratio
+                            >= float(
+                                cfg.get(
+                                    "zero_transition_10_green_min",
+                                    0.20,
+                                )
+                            )
+                    )
+
+                    decision[
+                        "zero_transition_10_ignored"
+                    ] = bool(
+                        zero_transition_10_ignored
+                    )
+
+                    self.latest_decision = decision
+
+                    # --------------------------------------------------
+                    # Only RESULT_VISIBLE frames participate.
+                    # A real non-result transition starts a new window.
+                    # --------------------------------------------------
+
+                    if round_boundary_hold:
+                        self.reset_candidate()
+
+                        decision["fusion_reason"] = (
+                            "round_boundary_blackout"
+                        )
+
+                        self.latest_decision = decision
+
+                    elif zero_transition_10_ignored:
+                        self.reset_candidate()
+
+                        decision["fusion_reason"] = (
+                            "zero_transition_10_ignored"
+                        )
+
+                        self.latest_decision = decision
+
+                    elif state != "RESULT_VISIBLE":
+                        self.reset_candidate()
+
+                    else:
+                        # While locked on the previous output, frames that
+                        # still clearly represent that same result do not
+                        # start a new five-frame window.
+                        #
+                        # GREEN is checked first because physical zero can
+                        # be predicted by CNN as 10 or 8.
+                        green_hint = (
+                            green_ratio >= green_ratio_min
+                            and green_ratio
+                                > red_ratio + fusion_color_margin
+                            and green_ratio
+                                > black_ratio + fusion_color_margin
+                        )
+
+                        effective_hint = (
+                            0
+                            if green_hint
+                            else raw_label
+                        )
+
+                        if (
+                            self.scan_locked
+                            and self.last_output_number is not None
+                            and int(effective_hint)
+                                == int(self.last_output_number)
+                        ):
+                            self.reset_candidate()
+
+                        else:
+                            # A low-confidence/noisy CNN frame is still part
+                            # of the five-frame window. Its small confidence
+                            # simply contributes less weight.
+                            self.candidate_predictions.append(
+                                decision
+                            )
+
+                            window = list(
+                                self.candidate_predictions
+                            )
+
+                            # --------------------------------------------------
+                            # Current weighted leader for UI diagnostics.
+                            # --------------------------------------------------
+
+                            number_stats = {}
+
+                            for item in window:
+                                n = int(
+                                    item["raw_label"]
+                                )
+                                s = max(
+                                    float(
+                                        item["raw_score"]
+                                    ),
+                                    1e-6,
+                                )
+
+                                stat = number_stats.setdefault(
+                                    n,
+                                    {
+                                        "weight": 0.0,
+                                        "count": 0,
+                                        "scores": [],
+                                        "margins": [],
+                                    },
+                                )
+
+                                stat["weight"] += s
+                                stat["count"] += 1
+                                stat["scores"].append(
+                                    float(
+                                        item["raw_score"]
+                                    )
+                                )
+                                stat["margins"].append(
+                                    float(
+                                        item["raw_margin"]
+                                    )
+                                )
+
+                            leader = max(
+                                number_stats,
+                                key=lambda n: (
+                                    number_stats[n]["weight"],
+                                    number_stats[n]["count"],
+                                ),
+                            )
+
+                            self.candidate_label = int(
+                                leader
+                            )
+                            self.candidate_streak = len(
+                                window
+                            )
+
+                            decision[
+                                "fusion_window_size"
+                            ] = len(window)
+
+                            decision[
+                                "fusion_winner"
+                            ] = int(leader)
+
+                            # --------------------------------------------------
+                            # Exactly at frame 5: produce one final decision.
+                            # --------------------------------------------------
+
+                            if len(window) >= fusion_frames:
+                                window = window[
+                                    -fusion_frames:
+                                ]
+
+                                avg_green = (
+                                    sum(
+                                        float(
+                                            p["green_ratio"]
+                                        )
+                                        for p in window
+                                    )
+                                    / len(window)
+                                )
+
+                                avg_red = (
+                                    sum(
+                                        float(
+                                            p["red_ratio"]
+                                        )
+                                        for p in window
+                                    )
+                                    / len(window)
+                                )
+
+                                avg_black = (
+                                    sum(
+                                        float(
+                                            p["black_ratio"]
+                                        )
+                                        for p in window
+                                    )
+                                    / len(window)
+                                )
+
+                                fused_color = "UNKNOWN"
+
+                                if (
+                                    avg_green
+                                        >= green_ratio_min
+                                    and avg_green
+                                        > avg_red
+                                            + fusion_color_margin
+                                    and avg_green
+                                        > avg_black
+                                            + fusion_color_margin
+                                ):
+                                    fused_color = "GREEN"
+
+                                elif (
+                                    avg_red
+                                        >= red_ratio_min
+                                    and (
+                                        avg_red
+                                        - avg_black
+                                    ) >= fusion_color_margin
+                                ):
+                                    fused_color = "RED"
+
+                                elif (
+                                    avg_black
+                                        >= black_ratio_min
+                                    and (
+                                        avg_black
+                                        - avg_red
+                                    ) >= fusion_color_margin
+                                ):
+                                    fused_color = "BLACK"
+
+                                # Rebuild number statistics for the exact
+                                # five-frame final window.
+                                number_stats = {}
+
+                                for item in window:
+                                    n = int(
+                                        item["raw_label"]
+                                    )
+
+                                    s = max(
+                                        float(
+                                            item["raw_score"]
+                                        ),
+                                        1e-6,
+                                    )
+
+                                    stat = number_stats.setdefault(
+                                        n,
+                                        {
+                                            "weight": 0.0,
+                                            "count": 0,
+                                            "scores": [],
+                                            "margins": [],
+                                        },
+                                    )
+
+                                    stat["weight"] += s
+                                    stat["count"] += 1
+
+                                    stat["scores"].append(
+                                        float(
+                                            item["raw_score"]
+                                        )
+                                    )
+
+                                    stat["margins"].append(
+                                        float(
+                                            item["raw_margin"]
+                                        )
+                                    )
+
+                                total_weight = sum(
+                                    x["weight"]
+                                    for x
+                                    in number_stats.values()
+                                )
+
+                                cnn_winner = max(
+                                    number_stats,
+                                    key=lambda n: (
+                                        number_stats[n]["weight"],
+                                        number_stats[n]["count"],
+                                    ),
+                                )
+
+                                winner_stat = (
+                                    number_stats[
+                                        cnn_winner
+                                    ]
+                                )
+
+                                winner_votes = int(
+                                    winner_stat[
+                                        "count"
+                                    ]
+                                )
+
+                                winner_weight_share = (
+                                    float(
+                                        winner_stat[
+                                            "weight"
+                                        ]
+                                    )
+                                    / max(
+                                        total_weight,
+                                        1e-9,
+                                    )
+                                )
+
+                                winner_avg_score = (
+                                    sum(
+                                        winner_stat[
+                                            "scores"
+                                        ]
+                                    )
+                                    / len(
+                                        winner_stat[
+                                            "scores"
+                                        ]
+                                    )
+                                )
+
+                                winner_avg_margin = (
+                                    sum(
+                                        winner_stat[
+                                            "margins"
+                                        ]
+                                    )
+                                    / len(
+                                        winner_stat[
+                                            "margins"
+                                        ]
+                                    )
+                                )
+
+                                final_number = int(
+                                    cnn_winner
+                                )
+
+                                fusion_reason = (
+                                    "cnn_color_fusion"
+                                )
+
+                                # ------------------------------------------
+                                # GREEN special case:
+                                # zero is the only green roulette number.
+                                # ------------------------------------------
+
+                                if fused_color == "GREEN":
+                                    final_number = 0
+
+                                    winner_votes = len(
+                                        window
+                                    )
+
+                                    winner_weight_share = 1.0
+
+                                    winner_avg_score = float(
+                                        avg_green
+                                    )
+
+                                    winner_avg_margin = max(
+                                        0.0,
+                                        float(
+                                            avg_green
+                                            - max(
+                                                avg_red,
+                                                avg_black,
+                                            )
+                                        ),
+                                    )
+
+                                    number_valid = True
+                                    color_valid = True
+                                    fusion_reason = (
+                                        "green_zero"
+                                    )
+
+                                else:
+                                    number_valid = (
+                                        winner_votes
+                                            >= fusion_min_votes
+                                        and winner_weight_share
+                                            >= fusion_min_weight_share
+                                        and winner_avg_score
+                                            >= min_frame_score
+                                        and winner_avg_margin
+                                            >= min_frame_margin
+                                    )
+
+                                    if (
+                                        final_number
+                                        in RED_NUMBERS
+                                    ):
+                                        expected_color = "RED"
+
+                                    elif (
+                                        final_number
+                                        in BLACK_NUMBERS
+                                    ):
+                                        expected_color = "BLACK"
+
+                                    elif final_number == 0:
+                                        expected_color = "GREEN"
+
+                                    else:
+                                        expected_color = "UNKNOWN"
+
+                                    if (
+                                        fused_color
+                                        == expected_color
+                                    ):
+                                        color_valid = True
+
+                                    elif (
+                                        fused_color
+                                        == "UNKNOWN"
+                                        and winner_votes
+                                            >= uncertain_color_min_votes
+                                        and winner_avg_score
+                                            >= uncertain_color_min_score
+                                    ):
+                                        # Five frames are already finished.
+                                        # Do not wait longer merely because
+                                        # RED/BLACK remained close.
+                                        color_valid = True
+                                        fusion_reason = (
+                                            "cnn_strong_color_uncertain"
+                                        )
+
+                                    else:
+                                        color_valid = False
+                                        fusion_reason = (
+                                            "color_conflict"
+                                        )
+
+                                accepted = (
+                                    number_valid
+                                    and color_valid
+                                )
+
+                                # Strict duplicate suppression remains:
+                                # the same already-confirmed result cannot
+                                # become a new event.
+                                if (
+                                    accepted
+                                    and self.scan_locked
+                                    and self.last_output_number
+                                        is not None
+                                    and final_number
+                                        == int(
+                                            self.last_output_number
+                                        )
+                                ):
+                                    accepted = False
+                                    fusion_reason = (
+                                        "same_result_locked"
+                                    )
+
+                                decision[
+                                    "fusion_complete"
+                                ] = True
+
+                                decision[
+                                    "fusion_winner"
+                                ] = int(
+                                    final_number
+                                )
+
+                                decision[
+                                    "fusion_vote_count"
+                                ] = int(
+                                    winner_votes
+                                )
+
+                                decision[
+                                    "fusion_weight_share"
+                                ] = float(
+                                    winner_weight_share
+                                )
+
+                                decision[
+                                    "fused_color"
+                                ] = fused_color
+
+                                decision[
+                                    "fused_green_ratio"
+                                ] = float(
+                                    avg_green
+                                )
+
+                                decision[
+                                    "fused_red_ratio"
+                                ] = float(
+                                    avg_red
+                                )
+
+                                decision[
+                                    "fused_black_ratio"
+                                ] = float(
+                                    avg_black
+                                )
+
+                                decision[
+                                    "fusion_color_valid"
+                                ] = bool(
+                                    color_valid
+                                )
+
+                                decision[
+                                    "fusion_number_valid"
+                                ] = bool(
+                                    number_valid
+                                )
+
+                                decision[
+                                    "fusion_reason"
+                                ] = fusion_reason
+
+                                # Display the FINAL fused number on the
+                                # fifth frame.
+                                decision["label"] = int(
+                                    final_number
+                                )
+
+                                decision["score"] = float(
+                                    winner_avg_score
+                                )
+
+                                decision["margin"] = float(
+                                    winner_avg_margin
+                                )
+
+                                self.latest_decision = (
+                                    decision
+                                )
+
+                                if accepted:
+                                    event = self.record_number(
+                                        final_number,
+                                        winner_avg_score,
+                                        winner_avg_margin,
+                                    )
+
+                                    # A result has now been registered for
+                                    # the newly opened round. Lock the round
+                                    # again until the NEXT blackout boundary.
+                                    self._round_boundary_open = False
+                                    self._round_boundary_streak = 0
+
+                                    self._round_guard_last_registration_mono = (
+                                        time.monotonic()
+                                    )
+
+                                    decision[
+                                        "round_boundary_open"
+                                    ] = False
+
+                                # The five-frame window is finished,
+                                # regardless of TRUE/FALSE.
+                                self.reset_candidate()
+
                 except Exception as exc:
                     state = f"ERROR: {exc}"
                     self.reset_candidate()
@@ -327,7 +1478,66 @@ class FinalVisionHub:
                 "decision": decision or self.latest_decision,
                 "candidateLabel": self.candidate_label,
                 "candidateStreak": self.candidate_streak,
+                "requiredConsecutiveFrames": required_consecutive_frames,
+                "minFrameScore": min_frame_score,
+                "minFrameMargin": min_frame_margin,
+                "backgroundColor": (
+                    (decision or self.latest_decision or {}).get(
+                        "background_color",
+                        "UNKNOWN",
+                    )
+                ),
+                "greenRatio": float(
+                    (decision or self.latest_decision or {}).get(
+                        "green_ratio",
+                        0.0,
+                    )
+                ),
+                "redRatio": float(
+                    (decision or self.latest_decision or {}).get(
+                        "red_ratio",
+                        0.0,
+                    )
+                ),
+                "blackRatio": float(
+                    (decision or self.latest_decision or {}).get(
+                        "black_ratio",
+                        0.0,
+                    )
+                ),
+                "zeroColorOverride": bool(
+                    (decision or self.latest_decision or {}).get(
+                        "zero_color_override",
+                        False,
+                    )
+                ),
+                "colorFilterBlocked": bool(
+                    (decision or self.latest_decision or {}).get(
+                        "color_filter_blocked",
+                        False,
+                    )
+                ),
+                "rawDecisionLabel": (
+                    (decision or self.latest_decision or {}).get(
+                        "raw_label"
+                    )
+                ),
+                "rawDecisionScore": (
+                    (decision or self.latest_decision or {}).get(
+                        "raw_score"
+                    )
+                ),
+                "colorCompatibleTop5": (
+                    (decision or self.latest_decision or {}).get(
+                        "color_compatible_top5",
+                        [],
+                    )
+                ),
                 "lastOutputNumber": self.last_output_number,
+                "scanLocked": self.scan_locked,
+                "unlockGapStreak": self.unlock_gap_streak,
+                "unlockChangeLabel": self.unlock_change_label,
+                "unlockChangeStreak": self.unlock_change_streak,
                 "latestMatch": self.latest_match,
                 "history": list(self.history)[:200],
                 "event": event,
@@ -645,6 +1855,15 @@ class Handler(BaseHTTPRequestHandler):
                 saved = self.hub.store.update_hardware(self._json_body())
                 self.hub.actions.update_config(saved)
                 self.send_json(saved)
+            elif path == "/api/double-match":
+                body = self._json_body()
+                enabled = self.hub.store.update_double_match(
+                    body.get("enabled", False)
+                )
+                self.send_json({
+                    "ok": True,
+                    "doubleMatchEnabled": enabled,
+                })
             elif path == "/api/start":
                 body = self._json_body()
                 self.send_json(self.hub.start_monitoring(body.get("selectedListId")))
