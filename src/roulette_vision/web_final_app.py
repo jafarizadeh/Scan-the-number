@@ -1340,6 +1340,40 @@ class FinalVisionHub:
                                             "color_conflict"
                                         )
 
+                                # ------------------------------------------
+                                # Targeted number-6 color override
+                                #
+                                # On the real display, bright illumination can
+                                # make BLACK evidence disappear even while CNN
+                                # consistently recognizes number 6.
+                                #
+                                # This exception applies ONLY to number 6.
+                                #
+                                # Explicit RED evidence still rejects 6.
+                                # Strong GREEN evidence is reserved for zero.
+                                # ------------------------------------------
+                                six_color_override = (
+                                    number_valid
+                                    and final_number == 6
+                                    and avg_red < red_ratio_min
+                                    and avg_green < green_ratio_min
+                                )
+
+                                if (
+                                    six_color_override
+                                    and not color_valid
+                                ):
+                                    color_valid = True
+                                    fusion_reason = (
+                                        "cnn_6_color_override"
+                                    )
+
+                                decision[
+                                    "six_color_override"
+                                ] = bool(
+                                    six_color_override
+                                )
+
                                 accepted = (
                                     number_valid
                                     and color_valid
