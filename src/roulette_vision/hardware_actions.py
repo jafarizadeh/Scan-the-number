@@ -85,18 +85,25 @@ class HardwareActions:
             }
 
     def trigger(self, hardware: dict[str, Any] | None = None, reason: str = "trigger", number: int | None = None) -> dict[str, Any]:
-        if hardware:
-            self.configure(hardware)
-
         with self.lock:
-            now = time.time()
-            cooldown_s = max(0.0, self.config.get("actionCooldownMs", 1200) / 1000.0)
+            action_config = dict(self.config)
 
-            if self.running and not self.config.get("allowOverlap", False):
+            # Per-trigger overrides are transient.
+            # They must not permanently modify the user's Hardware settings.
+            if hardware:
+                action_config.update(hardware)
+
+            now = time.time()
+            cooldown_s = max(
+                0.0,
+                action_config.get("actionCooldownMs", 1200) / 1000.0,
+            )
+
+            if self.running and not action_config.get("allowOverlap", False):
                 return {
                     "accepted": False,
                     "reason": "busy",
-                    "dryRun": self.config.get("dryRun", True),
+                    "dryRun": action_config.get("dryRun", True),
                     "lastError": self.lastError,
                 }
 
@@ -104,27 +111,32 @@ class HardwareActions:
                 return {
                     "accepted": False,
                     "reason": "cooldown",
-                    "dryRun": self.config.get("dryRun", True),
+                    "dryRun": action_config.get("dryRun", True),
                     "lastError": self.lastError,
                 }
 
             self.running = True
             self.lastError = None
             self.lastActionTime = now
+
             self.lastAction = {
                 "reason": reason,
                 "number": number,
                 "startedAt": now,
-                "config": dict(self.config),
+                "config": dict(action_config),
             }
 
-            self.thread = threading.Thread(target=self._worker, daemon=True)
+            self.thread = threading.Thread(
+                target=self._worker,
+                args=(action_config,),
+                daemon=True,
+            )
             self.thread.start()
 
             return {
                 "accepted": True,
                 "reason": "started",
-                "dryRun": self.config.get("dryRun", True),
+                "dryRun": action_config.get("dryRun", True),
             }
 
     # Compatibility aliases for different backend call styles
@@ -134,9 +146,9 @@ class HardwareActions:
     request = trigger
     test_action = trigger
 
-    def _worker(self):
+    def _worker(self, action_config=None):
         try:
-            cfg = dict(self.config)
+            cfg = dict(action_config or self.config)
 
             if cfg.get("dryRun", True):
                 time.sleep(0.25)
@@ -158,6 +170,26 @@ class HardwareActions:
         finally:
             with self.lock:
                 self.running = False
+
+    def close(self):
+        with self.lock:
+            thread = self.thread
+            serial_obj = self.serial_obj
+
+        if thread and thread.is_alive():
+            thread.join(timeout=1.0)
+
+        if serial_obj is not None:
+            try:
+                if getattr(serial_obj, "is_open", False):
+                    serial_obj.close()
+            except Exception:
+                pass
+
+        with self.lock:
+            self.serial_obj = None
+            self.connectedPort = None
+            self.running = False
 
     def _set_last_result(self, error: str | None, serial_lines: list[str]):
         with self.lock:

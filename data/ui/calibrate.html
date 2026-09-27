@@ -1,479 +1,454 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>Tapper Calibration</title>
-  <style>
-    :root{
-      --bg:#eef6fb;
-      --card:#ffffff;
-      --text:#19324a;
-      --muted:#6b8298;
-      --line:#d4e2ee;
-      --blue:#2f80ed;
-      --danger:#d64545;
-      --ok:#1d9b68;
-      --shadow:0 10px 28px rgba(31,64,98,.10);
-    }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tapper Config</title>
 
-    *{box-sizing:border-box}
+<style>
+:root{
+  --bg:#edf6fb;
+  --card:#ffffff;
+  --line:#d6e5ef;
+  --text:#17324a;
+  --muted:#6c8294;
+  --blue:#2f80ed;
+  --green:#19a66a;
+  --red:#d94a4a;
+}
 
-    body{
-      margin:0;
-      background:var(--bg);
-      color:var(--text);
-      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      overflow:hidden;
-    }
+*{
+  box-sizing:border-box;
+}
 
-    .page{
-      width:100vw;
-      height:100vh;
-      padding:14px;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  font-family:Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
 
-    .topbar{
-      height:54px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-    }
+.page{
+  width:100%;
+  height:100%;
+  min-height:100vh;
+  padding:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
 
-    .titleBlock{
-      display:flex;
-      flex-direction:column;
-      gap:2px;
-    }
+.card{
+  width:min(620px,100%);
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:24px;
+  padding:24px;
+  box-shadow:0 12px 32px rgba(30,70,100,.10);
+}
 
-    .title{
-      font-size:22px;
-      font-weight:950;
-      letter-spacing:-.5px;
-    }
+.top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:22px;
+}
 
-    .subtitle{
-      font-size:12px;
-      font-weight:800;
-      color:var(--muted);
-    }
+.title{
+  font-size:25px;
+  font-weight:900;
+}
 
-    .backBtn{
-      height:42px;
-      border:0;
-      border-radius:14px;
-      padding:0 16px;
-      font-size:14px;
-      font-weight:900;
-      color:white;
-      background:#315b7c;
-      box-shadow:var(--shadow);
-    }
+.subtitle{
+  margin-top:4px;
+  font-size:12px;
+  font-weight:700;
+  color:var(--muted);
+}
 
-    .grid{
-      flex:1;
-      min-height:0;
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:12px;
-    }
+.back{
+  border:0;
+  border-radius:12px;
+  padding:10px 18px;
+  font-weight:800;
+  color:white;
+  background:#315b7c;
+  cursor:pointer;
+}
 
-    .card{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:22px;
-      box-shadow:var(--shadow);
-      padding:14px;
-      min-height:0;
-      overflow:hidden;
-    }
+.delayBox{
+  padding:18px;
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:#f8fbfd;
+}
 
-    .cardTitle{
-      font-size:13px;
-      font-weight:950;
-      color:#375977;
-      text-transform:uppercase;
-      letter-spacing:.7px;
-      margin-bottom:12px;
-    }
+.delayHeader{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:14px;
+}
 
-    .field{
-      margin-bottom:12px;
-    }
+.delayLabel{
+  font-size:16px;
+  font-weight:900;
+}
 
-    .field label{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      font-size:13px;
-      font-weight:900;
-      margin-bottom:6px;
-    }
+.delayValue{
+  min-width:82px;
+  text-align:center;
+  padding:8px 12px;
+  border-radius:12px;
+  background:white;
+  border:1px solid var(--line);
+  font-size:20px;
+  font-weight:900;
+  color:var(--blue);
+}
 
-    .value{
-      color:var(--blue);
-      font-variant-numeric:tabular-nums;
-    }
+input[type=range]{
+  width:100%;
+  margin:4px 0 12px;
+}
 
-    input[type="range"]{
-      width:100%;
-    }
+.numberRow{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+}
 
-    .numberRow{
-      display:grid;
-      grid-template-columns:48px 1fr 48px;
-      gap:8px;
-      align-items:center;
-    }
+.numberInput{
+  width:110px;
+  height:42px;
+  text-align:center;
+  border:1px solid var(--line);
+  border-radius:12px;
+  font-size:17px;
+  font-weight:900;
+  color:var(--text);
+}
 
-    .smallBtn{
-      height:38px;
-      border:0;
-      border-radius:12px;
-      font-size:20px;
-      font-weight:950;
-      color:#24455f;
-      background:#e7f1f8;
-    }
+.step{
+  width:42px;
+  height:42px;
+  border:0;
+  border-radius:12px;
+  font-size:22px;
+  font-weight:900;
+  color:white;
+  background:#54748d;
+  cursor:pointer;
+}
 
-    .numInput{
-      width:100%;
-      height:38px;
-      border:1px solid var(--line);
-      border-radius:12px;
-      text-align:center;
-      font-size:17px;
-      font-weight:950;
-      color:var(--text);
-      background:#fbfdff;
-    }
+.actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-top:18px;
+}
 
-    .actions{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-      margin-top:8px;
-    }
+.btn{
+  height:54px;
+  border:0;
+  border-radius:15px;
+  font-size:14px;
+  font-weight:900;
+  color:white;
+  cursor:pointer;
+}
 
-    .actionBtn{
-      height:48px;
-      border:0;
-      border-radius:16px;
-      font-size:15px;
-      font-weight:950;
-      color:white;
-      background:var(--blue);
-      box-shadow:0 8px 18px rgba(47,128,237,.22);
-    }
+.sound{
+  background:var(--blue);
+}
 
-    .actionBtn.secondary{
-      background:#315b7c;
-    }
+.tapper{
+  background:var(--green);
+}
 
-    .actionBtn.safe{
-      background:var(--ok);
-    }
+.save{
+  grid-column:1/-1;
+  background:#315b7c;
+}
 
-    .actionBtn.danger{
-      background:var(--danger);
-    }
+.status{
+  margin-top:16px;
+  min-height:42px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:10px;
+  border-radius:13px;
+  border:1px solid var(--line);
+  background:#f7fbfe;
+  font-size:12px;
+  font-weight:800;
+  color:var(--muted);
+}
 
-    .actionBtn:active,
-    .smallBtn:active,
-    .backBtn:active{
-      transform:translateY(1px);
-      opacity:.9;
-    }
+@media(max-width:520px){
+  .page{
+    padding:10px;
+  }
 
-    .hint{
-      margin-top:10px;
-      border-radius:16px;
-      background:#f2f8fc;
-      border:1px solid #d9e8f2;
-      padding:10px;
-      font-size:12px;
-      line-height:1.45;
-      font-weight:750;
-      color:#567085;
-    }
+  .card{
+    padding:16px;
+    border-radius:18px;
+  }
 
-    .log{
-      height:100%;
-      overflow:auto;
-      background:#0f1720;
-      color:#d7f7ff;
-      border-radius:16px;
-      padding:10px;
-      font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
-      font-size:12px;
-      line-height:1.45;
-      white-space:pre-wrap;
-    }
+  .title{
+    font-size:21px;
+  }
 
-    .statusLine{
-      margin-bottom:10px;
-      padding:10px;
-      border-radius:16px;
-      background:#f7fbfe;
-      border:1px solid var(--line);
-      font-size:12px;
-      font-weight:850;
-      color:#4f6b82;
-    }
+  .actions{
+    grid-template-columns:1fr;
+  }
 
-    @media (max-width:760px){
-      body{overflow:auto}
-      .page{height:auto; min-height:100vh}
-      .grid{grid-template-columns:1fr}
-      .log{height:260px}
-    }
-  </style>
+  .save{
+    grid-column:auto;
+  }
+}
+</style>
 </head>
+
 <body>
-  <div class="page">
-    <div class="topbar">
-      <div class="titleBlock">
-        <div class="title">Tapper Calibration</div>
-        <div class="subtitle">GP2 servo · GP0 buzzer · safe microsecond control</div>
+
+<div class="page">
+  <div class="card">
+
+    <div class="top">
+      <div>
+        <div class="title">Tapper Config</div>
+        <div class="subtitle">
+          Sound test · Tapper test · Execution delay
+        </div>
       </div>
-      <button class="backBtn" onclick="location.href='/?v=calibration-back'">Back</button>
+
+      <button
+        class="back"
+        onclick="location.href='http://'+location.hostname+':8080/?v=back-from-calibration'"
+      >
+        Back
+      </button>
     </div>
 
-    <div class="grid">
-      <section class="card">
-        <div class="cardTitle">Servo Position</div>
 
-        <div class="field">
-          <label>
-            <span>Up position</span>
-            <span class="value"><span id="upVal">1000</span> µs</span>
-          </label>
-          <div class="numberRow">
-            <button class="smallBtn" data-step="upUs:-25">−</button>
-            <input id="upUs" class="numInput" type="number" min="800" max="1400" step="25" value="1000">
-            <button class="smallBtn" data-step="upUs:25">+</button>
-          </div>
-          <input id="upRange" type="range" min="800" max="1400" step="25" value="1000">
+    <div class="delayBox">
+
+      <div class="delayHeader">
+        <div class="delayLabel">Tapper Execution Delay</div>
+
+        <div class="delayValue">
+          <span id="delayDisplay">5.0</span> s
         </div>
+      </div>
 
-        <div class="field">
-          <label>
-            <span>Tap position</span>
-            <span class="value"><span id="tapVal">1200</span> µs</span>
-          </label>
-          <div class="numberRow">
-            <button class="smallBtn" data-step="tapUs:-25">−</button>
-            <input id="tapUs" class="numInput" type="number" min="900" max="1600" step="25" value="1200">
-            <button class="smallBtn" data-step="tapUs:25">+</button>
-          </div>
-          <input id="tapRange" type="range" min="900" max="1600" step="25" value="1200">
-        </div>
+      <input
+        id="delayRange"
+        type="range"
+        min="0"
+        max="10"
+        step="0.5"
+        value="5"
+      >
 
-        <div class="field">
-          <label>
-            <span>Hold time</span>
-            <span class="value"><span id="holdVal">200</span> ms</span>
-          </label>
-          <div class="numberRow">
-            <button class="smallBtn" data-step="holdMs:-50">−</button>
-            <input id="holdMs" class="numInput" type="number" min="50" max="700" step="50" value="200">
-            <button class="smallBtn" data-step="holdMs:50">+</button>
-          </div>
-          <input id="holdRange" type="range" min="50" max="700" step="50" value="200">
-        </div>
+      <div class="numberRow">
+        <button class="step" id="minusBtn">−</button>
 
-        <div class="actions">
-          <button class="actionBtn secondary" id="moveUpBtn">Move Up</button>
-          <button class="actionBtn secondary" id="moveTapBtn">Move To Tap</button>
-          <button class="actionBtn" id="testTapBtn">Test Tap</button>
-          <button class="actionBtn safe" id="saveBtn">Save</button>
-          <button class="actionBtn secondary" id="buzzBtn">Test Buzzer</button>
-          <button class="actionBtn danger" id="offBtn">Off / Safe</button>
-        </div>
+        <input
+          id="delayInput"
+          class="numberInput"
+          type="number"
+          min="0"
+          max="10"
+          step="0.5"
+          value="5"
+        >
 
-        <div class="hint">
-          Start with Tap position around 1100–1200 µs. Increase slowly by 25 µs.
-          If the screen bends or pressure is high, reduce the value immediately.
-        </div>
-      </section>
+        <button class="step" id="plusBtn">+</button>
+      </div>
 
-      <section class="card">
-        <div class="cardTitle">Status & Logs</div>
-        <div id="statusLine" class="statusLine">Loading...</div>
-        <pre id="log" class="log"></pre>
-      </section>
     </div>
+
+
+    <div class="actions">
+
+      <button class="btn sound" id="soundBtn">
+        Test Sound
+      </button>
+
+      <button class="btn tapper" id="tapperBtn">
+        Test Tapper
+      </button>
+
+      <button class="btn save" id="saveBtn">
+        Save Delay
+      </button>
+
+    </div>
+
+
+    <div class="status" id="status">
+      Loading...
+    </div>
+
   </div>
+</div>
 
-  <script>
-    const $ = (id) => document.getElementById(id);
 
-    const fields = {
-      upUs: $("upUs"),
-      tapUs: $("tapUs"),
-      holdMs: $("holdMs"),
-      upRange: $("upRange"),
-      tapRange: $("tapRange"),
-      holdRange: $("holdRange"),
-    };
+<script>
+const $ = id => document.getElementById(id);
 
-    function clamp(n, min, max){
-      return Math.max(min, Math.min(max, Number(n)));
-    }
+function clamp(v){
+  v = Number(v);
+  if(!Number.isFinite(v)) v = 5;
+  return Math.max(0, Math.min(10, v));
+}
 
-    function values(){
-      return {
-        upUs: clamp(fields.upUs.value, 800, 1400),
-        tapUs: clamp(fields.tapUs.value, 900, 1600),
-        holdMs: clamp(fields.holdMs.value, 50, 700),
-      };
-    }
+function getDelaySeconds(){
+  return clamp($("delayInput").value);
+}
 
-    function sync(){
-      const v = values();
+function sync(value){
+  const v = clamp(value);
 
-      fields.upUs.value = v.upUs;
-      fields.tapUs.value = v.tapUs;
-      fields.holdMs.value = v.holdMs;
+  $("delayInput").value = v.toFixed(1);
+  $("delayRange").value = v;
+  $("delayDisplay").textContent = v.toFixed(1);
+}
 
-      fields.upRange.value = v.upUs;
-      fields.tapRange.value = v.tapUs;
-      fields.holdRange.value = v.holdMs;
+async function post(path, body={}){
+  const res = await fetch(path,{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify(body)
+  });
 
-      $("upVal").textContent = v.upUs;
-      $("tapVal").textContent = v.tapUs;
-      $("holdVal").textContent = v.holdMs;
-    }
+  const data = await res.json();
 
-    function log(msg, data){
-      const box = $("log");
-      const t = new Date().toLocaleTimeString();
-      let text = `[${t}] ${msg}`;
-      if(data !== undefined){
-        text += "\n" + JSON.stringify(data, null, 2);
-      }
-      box.textContent = text + "\n\n" + box.textContent;
-    }
+  if(!res.ok || data.ok === false){
+    throw new Error(data.error || "Request failed");
+  }
 
-    async function post(url, body){
-      const res = await fetch(url, {
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify(body || {})
-      });
-      const data = await res.json();
-      if(!res.ok || data.ok === false){
-        throw data;
-      }
-      return data;
-    }
+  return data;
+}
 
-    async function loadStatus(){
-      try{
-        const res = await fetch("/api/calibration/status");
-        const data = await res.json();
+async function load(){
+  try{
+    const res = await fetch("/api/status");
+    const data = await res.json();
 
-        if(data.config){
-          fields.upUs.value = data.config.upUs ?? 1000;
-          fields.tapUs.value = data.config.tapUs ?? 1200;
-          fields.holdMs.value = data.config.holdMs ?? 200;
-          sync();
-        }
+    const delayMs =
+      Number(data?.config?.delayMs ?? 5000);
 
-        $("statusLine").textContent = data.pico?.ok
-          ? "Pico connected. Calibration ready."
-          : "Calibration page loaded. Pico status unavailable.";
+    sync(delayMs / 1000);
 
-        log("STATUS", data);
-      }catch(err){
-        $("statusLine").textContent = "Status error";
-        log("STATUS ERROR", err);
-      }
-    }
+    $("status").textContent =
+      "Ready";
+  }
+  catch(e){
+    $("status").textContent =
+      "Could not load current delay";
+  }
+}
 
-    async function sendServo(command, extra){
-      sync();
-      const v = values();
-      const body = Object.assign({command, ...v}, extra || {});
-      log("SEND " + command, body);
-      const data = await post("/api/calibration/servo", body);
-      log("PICO RESULT", data);
-      return data;
-    }
+$("delayRange").addEventListener("input",()=>{
+  sync($("delayRange").value);
+});
 
-    $("moveUpBtn").onclick = async () => {
-      try{ await sendServo("up"); }catch(e){ log("ERROR", e); }
-    };
+$("delayInput").addEventListener("input",()=>{
+  sync($("delayInput").value);
+});
 
-    $("moveTapBtn").onclick = async () => {
-      try{
-        const v = values();
-        await sendServo("move", {positionUs:v.tapUs});
-      }catch(e){ log("ERROR", e); }
-    };
+$("minusBtn").onclick = ()=>{
+  sync(getDelaySeconds() - 0.5);
+};
 
-    $("testTapBtn").onclick = async () => {
-      try{ await sendServo("tap"); }catch(e){ log("ERROR", e); }
-    };
+$("plusBtn").onclick = ()=>{
+  sync(getDelaySeconds() + 0.5);
+};
 
-    $("buzzBtn").onclick = async () => {
-      try{ await sendServo("buzz", {buzzMs:300}); }catch(e){ log("ERROR", e); }
-    };
 
-    $("offBtn").onclick = async () => {
-      try{ await sendServo("off"); }catch(e){ log("ERROR", e); }
-    };
+$("soundBtn").onclick = async ()=>{
+  try{
+    $("status").textContent =
+      "Testing sound...";
 
-    $("saveBtn").onclick = async () => {
-      try{
-        sync();
-        const v = values();
-        log("SAVE", v);
-        const data = await post("/api/calibration/save", v);
-        $("statusLine").textContent = "Saved. Future triggers will use these values.";
-        log("SAVE RESULT", data);
-      }catch(e){
-        $("statusLine").textContent = "Save failed.";
-        log("SAVE ERROR", e);
-      }
-    };
-
-    document.querySelectorAll("[data-step]").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const [id, deltaRaw] = btn.dataset.step.split(":");
-        const delta = Number(deltaRaw);
-        const el = fields[id];
-        el.value = Number(el.value) + delta;
-        sync();
-      });
+    await post("/api/servo",{
+      command:"buzz",
+      buzzMs:300
     });
 
-    fields.upUs.addEventListener("input", sync);
-    fields.tapUs.addEventListener("input", sync);
-    fields.holdMs.addEventListener("input", sync);
+    $("status").textContent =
+      "Sound test completed";
+  }
+  catch(e){
+    $("status").textContent =
+      "Sound test failed";
+  }
+};
 
-    fields.upRange.addEventListener("input", () => {
-      fields.upUs.value = fields.upRange.value;
-      sync();
+
+$("tapperBtn").onclick = async ()=>{
+  const delay = getDelaySeconds();
+
+  try{
+    $("status").textContent =
+      `Tapper will run in ${delay.toFixed(1)} seconds...`;
+
+    await new Promise(resolve =>
+      setTimeout(resolve, delay * 1000)
+    );
+
+    await post("/api/servo",{
+      command:"tap"
     });
 
-    fields.tapRange.addEventListener("input", () => {
-      fields.tapUs.value = fields.tapRange.value;
-      sync();
+    $("status").textContent =
+      "Tapper test completed";
+  }
+  catch(e){
+    $("status").textContent =
+      "Tapper test failed";
+  }
+};
+
+
+$("saveBtn").onclick = async ()=>{
+  const delayMs =
+    Math.round(getDelaySeconds() * 1000);
+
+  try{
+    $("status").textContent =
+      "Saving delay...";
+
+    const data = await post("/api/delay",{
+      delayMs
     });
 
-    fields.holdRange.addEventListener("input", () => {
-      fields.holdMs.value = fields.holdRange.value;
-      sync();
-    });
+    sync(
+      Number(data.delayMs ?? delayMs) / 1000
+    );
 
-    sync();
-    loadStatus();
-  </script>
-  <script src="/js/calibration-button.js?v=calib-btn-2"></script>
+    $("status").textContent =
+      `Saved: ${(Number(data.delayMs ?? delayMs)/1000).toFixed(1)} s`;
+  }
+  catch(e){
+    $("status").textContent =
+      "Save failed: " + e.message;
+  }
+};
+
+
+sync(5);
+load();
+</script>
+
 </body>
 </html>

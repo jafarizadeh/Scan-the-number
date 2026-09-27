@@ -514,7 +514,13 @@ class Handler(BaseHTTPRequestHandler):
         path = urlparse(self.path).path
 
         if path in ("/", "/calibrate", "/calibrate.html"):
-            raw = HTML.encode()
+            ui_path = (
+                Path(__file__).resolve().parents[2]
+                / "data"
+                / "ui"
+                / "calibrate.html"
+            )
+            raw = ui_path.read_bytes()
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("Content-Length", str(len(raw)))
@@ -522,19 +528,46 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.write(raw)
             return
 
-        if path == "/api/status":
+        if path in ("/api/status", "/api/calibration/status"):
             cfg = read_config()
             hw = cfg.setdefault("hardware", {})
-            config = {
-                "upUs": int(hw.get("servoUpUs", 1000)),
-                "tapUs": int(hw.get("servoTapUs", 1200)),
-                "holdMs": int(hw.get("servoHoldMs", 200)),
-            }
+
+            delay_ms = int(
+                hw.get("actuatorDelayMs", 5000)
+            )
+
+            # Main application is authoritative for runtime hardware settings.
             try:
-                pico = send_pico("GETCAL", 1.0)
-            except Exception as exc:
-                pico = {"ok": False, "error": str(exc)}
-            self.send_json({"ok": True, "config": config, "pico": pico})
+                from urllib.request import urlopen
+
+                with urlopen(
+                    "http://127.0.0.1:8080/api/settings",
+                    timeout=2.0,
+                ) as response:
+                    main_settings = json.loads(
+                        response.read().decode("utf-8")
+                    )
+
+                delay_ms = int(
+                    main_settings
+                    .get("hardware", {})
+                    .get("actuatorDelayMs", delay_ms)
+                )
+
+            except Exception:
+                pass
+
+            delay_ms = max(
+                0,
+                min(10000, delay_ms),
+            )
+
+            self.send_json({
+                "ok": True,
+                "config": {
+                    "delayMs": delay_ms,
+                },
+            })
             return
 
         self.send_error(404, "Not Found")
@@ -543,13 +576,14 @@ class Handler(BaseHTTPRequestHandler):
         path = urlparse(self.path).path
         data = self.read_json()
 
-        if path == "/api/servo":
+        if path in ("/api/servo", "/api/calibration/servo"):
             command = str(data.get("command", "")).lower().strip()
 
             up_us = clamp(data.get("upUs", 1000), 800, 1400)
             tap_us = clamp(data.get("tapUs", data.get("positionUs", 1200)), 900, 1600)
             position_us = clamp(data.get("positionUs", tap_us), 800, 1600)
-            hold_ms = clamp(data.get("holdMs", 200), 50, 700)
+            hold_ms = clamp(data.get("holdMs", 200), 100, 3000)
+            return_ms = clamp(data.get("returnMs", 900), 100, 3000)
             buzz_ms = clamp(data.get("buzzMs", 300), 50, 1500)
 
             if command == "up":
@@ -557,7 +591,9 @@ class Handler(BaseHTTPRequestHandler):
             elif command == "move":
                 pico_cmd, wait = f"SERVO {position_us}", 0.8
             elif command == "tap":
-                pico_cmd, wait = f"TAP {tap_us} {hold_ms}", 1.5
+                # Use the calibration already stored on the Pico.
+                # The config page only controls execution delay.
+                pico_cmd, wait = "TAP", 7.0
             elif command == "off":
                 pico_cmd, wait = "OFF", 0.8
             elif command == "buzz":
@@ -572,10 +608,81 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json({"ok": False, "command": pico_cmd, "error": str(exc)}, 500)
             return
 
-        if path == "/api/save":
+        if path in ("/api/delay", "/api/calibration/delay"):
+            delay_ms = clamp(
+                data.get("delayMs", 5000),
+                0,
+                10000,
+            )
+
+            try:
+                from urllib.request import Request, urlopen
+
+                # Read the complete hardware configuration from
+                # the running application.
+                with urlopen(
+                    "http://127.0.0.1:8080/api/settings",
+                    timeout=2.0,
+                ) as response:
+                    settings = json.loads(
+                        response.read().decode("utf-8")
+                    )
+
+                hardware = dict(
+                    settings.get("hardware", {})
+                )
+
+                hardware["actuatorDelayMs"] = delay_ms
+
+                request = Request(
+                    "http://127.0.0.1:8080/api/hardware",
+                    data=json.dumps(hardware).encode("utf-8"),
+                    headers={
+                        "Content-Type": "application/json",
+                    },
+                    method="POST",
+                )
+
+                with urlopen(
+                    request,
+                    timeout=3.0,
+                ) as response:
+                    saved_hardware = json.loads(
+                        response.read().decode("utf-8")
+                    )
+
+                # Keep data/config.json aligned as a fallback.
+                cfg = read_config()
+                hw = cfg.setdefault("hardware", {})
+                hw["actuatorDelayMs"] = delay_ms
+                write_config(cfg)
+
+                self.send_json({
+                    "ok": True,
+                    "delayMs": int(
+                        saved_hardware.get(
+                            "actuatorDelayMs",
+                            delay_ms,
+                        )
+                    ),
+                })
+
+            except Exception as exc:
+                self.send_json(
+                    {
+                        "ok": False,
+                        "error": str(exc),
+                    },
+                    status=500,
+                )
+
+            return
+
+        if path in ("/api/save", "/api/calibration/save"):
             up_us = clamp(data.get("upUs", 1000), 800, 1400)
             tap_us = clamp(data.get("tapUs", 1200), 900, 1600)
-            hold_ms = clamp(data.get("holdMs", 200), 50, 700)
+            hold_ms = clamp(data.get("holdMs", 200), 100, 3000)
+            return_ms = clamp(data.get("returnMs", 900), 100, 3000)
 
             cfg = read_config()
             hw = cfg.setdefault("hardware", {})
@@ -590,14 +697,31 @@ class Handler(BaseHTTPRequestHandler):
             hw["servoUpUs"] = up_us
             hw["servoTapUs"] = tap_us
             hw["servoHoldMs"] = hold_ms
+            hw["servoReturnMs"] = return_ms
+
+            # Keep generic actuator timing values synchronized.
+            hw["actuatorHoldMs"] = hold_ms
+            hw["actuatorReturnMs"] = return_ms
             write_config(cfg)
 
             try:
-                pico = send_pico(f"SETCAL {up_us} {tap_us} {hold_ms}", 1.2)
+                pico = send_pico(
+                    f"SETCAL {up_us} {tap_us} {hold_ms} {return_ms}",
+                    1.2,
+                )
             except Exception as exc:
                 pico = {"ok": False, "error": str(exc)}
 
-            self.send_json({"ok": True, "saved": {"upUs": up_us, "tapUs": tap_us, "holdMs": hold_ms}, "pico": pico})
+            self.send_json({
+                "ok": True,
+                "saved": {
+                    "upUs": up_us,
+                    "tapUs": tap_us,
+                    "holdMs": hold_ms,
+                    "returnMs": return_ms,
+                },
+                "pico": pico,
+            })
             return
 
         self.send_error(404, "Not Found")
