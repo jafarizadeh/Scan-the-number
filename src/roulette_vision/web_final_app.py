@@ -11,6 +11,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 
 import cv2
+import numpy as np
 
 from .camera import FrameSource
 from .config import load_config, ensure_project_dirs
@@ -26,6 +27,7 @@ DEFAULT_TARGET_LISTS = {
         {"id": "list-1", "name": "List 1", "numbers": [0, 8, 10, 11, 13, 20, 29, 35, 36]},
     ],
     "doubleMatchEnabled": False,
+    "spinAutoEnabled": True,
     "hardware": dict(DEFAULT_HARDWARE_CONFIG),
 }
 
@@ -82,6 +84,7 @@ class AppStore:
             print(f"[APP] settings load failed: {exc}")
         clean = clean_lists(data)
         clean["doubleMatchEnabled"] = bool(data.get("doubleMatchEnabled", False))
+        clean["spinAutoEnabled"] = bool(data.get("spinAutoEnabled", True))
         clean["hardware"] = clean_hardware_config(data.get("hardware", {}))
         return clean
 
@@ -106,6 +109,12 @@ class AppStore:
             self.data["doubleMatchEnabled"] = bool(enabled)
             self.save()
             return bool(self.data["doubleMatchEnabled"])
+
+    def update_spin_auto(self, enabled):
+        with self.lock:
+            self.data["spinAutoEnabled"] = bool(enabled)
+            self.save()
+            return bool(self.data["spinAutoEnabled"])
 
     def update_hardware(self, payload):
         clean = clean_hardware_config(payload)
@@ -258,8 +267,12 @@ class FinalVisionHub:
         is_match = int(number) in target_set
         roi_path = self.save_roi(number)
         event_id = f"ev-{uuid.uuid4().hex[:10]}"
+        app_settings = self.store.get()
         double_match_enabled = bool(
-            self.store.get().get("doubleMatchEnabled", False)
+            app_settings.get("doubleMatchEnabled", False)
+        )
+        spin_auto_enabled = bool(
+            app_settings.get("spinAutoEnabled", True)
         )
 
         previous_number = self.previous_pair_number
@@ -268,16 +281,191 @@ class FinalVisionHub:
             int(previous_number) in target_set
         )
 
-        action_result = {"accepted": False, "reason": "not_match"}
+        def trigger_components(*, sound, tapper, reason):
+            base_hardware = app_settings.get("hardware", {})
 
-        if double_match_enabled:
-            if is_match and previous_is_match:
-                action_result = self.actions.trigger_async(
+            buzzer_enabled = bool(
+                base_hardware.get("buzzerEnabled", False)
+                and sound
+            )
+
+            actuator_enabled = bool(
+                base_hardware.get("actuatorEnabled", False)
+                and tapper
+            )
+
+            try:
+                tapper_delay_ms = int(
+                    base_hardware.get(
+                        "actuatorDelayMs",
+                        0,
+                    )
+                )
+            except Exception:
+                tapper_delay_ms = 0
+
+            tapper_delay_ms = max(
+                0,
+                min(10000, tapper_delay_ms),
+            )
+
+            if not buzzer_enabled and not actuator_enabled:
+                return {
+                    "accepted": False,
+                    "reason": "requested_actions_disabled",
+                }
+
+            # ------------------------------------------------
+            # No Tapper:
+            # Sound executes immediately.
+            # ------------------------------------------------
+            if not actuator_enabled:
+                return self.actions.trigger_async(
+                    hardware={
+                        "buzzerEnabled": buzzer_enabled,
+                        "actuatorEnabled": False,
+                        "actuatorDelayMs": 0,
+                    },
                     number=number,
                     list_name=selected.get("name", ""),
-                    reason="two_consecutive_numbers_in_selected_list",
+                    reason=reason,
                 )
-            elif is_match:
+
+            # ------------------------------------------------
+            # Tapper with no delay:
+            # preserve normal immediate behavior.
+            # ------------------------------------------------
+            if tapper_delay_ms <= 0:
+                return self.actions.trigger_async(
+                    hardware={
+                        "buzzerEnabled": buzzer_enabled,
+                        "actuatorEnabled": True,
+                        "actuatorDelayMs": 0,
+                    },
+                    number=number,
+                    list_name=selected.get("name", ""),
+                    reason=reason,
+                )
+
+            # ------------------------------------------------
+            # Delayed Tapper:
+            #
+            # Sound MUST NOT wait for Tapper.
+            # ------------------------------------------------
+            if buzzer_enabled:
+                sound_result = self.actions.trigger_async(
+                    hardware={
+                        "buzzerEnabled": True,
+                        "actuatorEnabled": False,
+                        "actuatorDelayMs": 0,
+                    },
+                    number=number,
+                    list_name=selected.get("name", ""),
+                    reason=reason + "_sound",
+                )
+            else:
+                sound_result = {
+                    "accepted": False,
+                    "reason": "sound_not_requested",
+                }
+
+            def delayed_tapper():
+                time.sleep(
+                    tapper_delay_ms / 1000.0
+                )
+
+                # Check the CURRENT Tapper switch.
+                # If the user switched it OFF during the delay,
+                # the pending Tapper action is cancelled.
+                current_hardware = (
+                    self.store
+                    .get()
+                    .get("hardware", {})
+                )
+
+                if not bool(
+                    current_hardware.get(
+                        "actuatorEnabled",
+                        False,
+                    )
+                ):
+                    return
+
+                tap_hardware = {
+                    "buzzerEnabled": False,
+                    "actuatorEnabled": True,
+
+                    # Delay was already performed above.
+                    "actuatorDelayMs": 0,
+
+                    # Scheduled Tapper should not be rejected
+                    # because of the earlier Sound cooldown.
+                    "actionCooldownMs": 0,
+                }
+
+                # If hardware is briefly busy exactly at the
+                # scheduled moment, retry for a short period.
+                for _ in range(20):
+                    result = self.actions.trigger_async(
+                        hardware=tap_hardware,
+                        number=number,
+                        list_name=selected.get(
+                            "name",
+                            "",
+                        ),
+                        reason=(
+                            reason
+                            + "_delayed_tapper"
+                        ),
+                    )
+
+                    if result.get("accepted"):
+                        return
+
+                    if result.get("reason") not in (
+                        "busy",
+                        "cooldown",
+                    ):
+                        return
+
+                    time.sleep(0.1)
+
+            threading.Thread(
+                target=delayed_tapper,
+                daemon=True,
+                name="roulette-delayed-tapper",
+            ).start()
+
+            return {
+                "accepted": True,
+                "reason": "tapper_scheduled",
+                "delayMs": tapper_delay_ms,
+                "sound": sound_result,
+            }
+
+        tapper_auto_disabled = False
+        action_result = {"accepted": False, "reason": "not_match"}
+
+        # ----------------------------------------------------
+        # DOUBLE MATCH GATE
+        #
+        # When enabled, NO hardware action may execute until
+        # the current number AND the immediately previous
+        # scanned number are both members of the active list.
+        #
+        # Once this condition is satisfied, the existing
+        # Spin Auto behavior runs unchanged.
+        # ----------------------------------------------------
+        double_match_blocked = (
+            double_match_enabled
+            and not (
+                is_match
+                and previous_is_match
+            )
+        )
+
+        if double_match_blocked:
+            if is_match:
                 action_result = {
                     "accepted": False,
                     "reason": "waiting_for_second_match",
@@ -287,12 +475,63 @@ class FinalVisionHub:
                     "accepted": False,
                     "reason": "double_match_sequence_broken",
                 }
-        elif is_match:
-            action_result = self.actions.trigger_async(
-                number=number,
-                list_name=selected.get("name", ""),
-                reason="number_in_selected_list",
-            )
+
+        else:
+            tapper_auto_disabled = False
+
+            # Spin Auto OFF = manual re-arm mode.
+            #
+            # MATCH:
+            #   Sound only.
+            #   Tapper does NOT run.
+            #   Tapper is then persistently switched OFF and must be
+            #   manually re-enabled by the user.
+            #
+            # NON-MATCH:
+            #   Tapper runs only if the user has manually enabled it.
+            if not spin_auto_enabled:
+                if is_match:
+                    action_result = trigger_components(
+                        sound=True,
+                        tapper=False,
+                        reason="number_in_selected_list_spin_auto_off",
+                    )
+
+                    current_hardware = dict(
+                        self.store.get().get("hardware", {})
+                    )
+
+                    if current_hardware.get("actuatorEnabled", False):
+                        current_hardware["actuatorEnabled"] = False
+
+                        saved_hardware = self.store.update_hardware(
+                            current_hardware
+                        )
+
+                        self.actions.update_config(saved_hardware)
+                        tapper_auto_disabled = True
+
+                else:
+                    action_result = trigger_components(
+                        sound=False,
+                        tapper=True,
+                        reason="number_outside_selected_list_spin_auto_off",
+                    )
+
+            # Spin Auto ON has priority for action execution.
+            #
+            # MATCH:
+            #   Sound + Tapper are requested immediately.
+            #   Double Match must not suppress the action.
+            #
+            # NON-MATCH:
+            #   No action.
+            elif is_match:
+                action_result = trigger_components(
+                    sound=True,
+                    tapper=True,
+                    reason="number_in_selected_list_spin_auto_on",
+                )
         event = {
             "id": event_id,
             "timestamp": now_iso(),
@@ -303,6 +542,8 @@ class FinalVisionHub:
             "listName": selected.get("name"),
             "targetNumbers": list(selected.get("numbers", [])),
             "isMatch": bool(is_match),
+            "spinAutoEnabled": spin_auto_enabled,
+            "tapperAutoDisabled": bool(tapper_auto_disabled),
             "action": action_result,
             "roiPath": roi_path,
         }
@@ -1897,6 +2138,15 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json({
                     "ok": True,
                     "doubleMatchEnabled": enabled,
+                })
+            elif path == "/api/spin-auto":
+                body = self._json_body()
+                enabled = self.hub.store.update_spin_auto(
+                    body.get("enabled", True)
+                )
+                self.send_json({
+                    "ok": True,
+                    "spinAutoEnabled": enabled,
                 })
             elif path == "/api/start":
                 body = self._json_body()

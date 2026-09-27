@@ -226,12 +226,7 @@
   line-height:1;
 }
 
-.historyChipWrap.historyHit .numChip{
-  outline:3px solid #ffcc33;
-  box-shadow:
-    0 0 0 1px rgba(255,255,255,.95),
-    0 4px 10px rgba(255,190,0,.35);
-}
+
 
 .historyEmpty{
   height:70px;
@@ -746,3 +741,37 @@
 .historyStatsNumber.green{
   background:linear-gradient(180deg,#32c978,#1faf63);
 }
+
+/* === HISTORY VISUAL PRIORITY START === */
+
+/* Normal / non-match numbers:
+   slightly smaller and visually quieter */
+.historyChipWrap:not(.historyHit) .numChip{
+  transform: scale(.90);
+  opacity: .62;
+  font-weight: 700;
+  filter: saturate(.72);
+  transition:
+    transform .14s ease,
+    opacity .14s ease,
+    filter .14s ease;
+}
+
+/* Numbers that exist in the active list:
+   full original size, strong and clearly highlighted */
+.historyChipWrap.historyHit .numChip{
+  transform: scale(1);
+  opacity: 1;
+  filter: none;
+  font-weight: 900;
+
+  outline: 3px solid #0057d9;
+  outline-offset: 1px;
+
+  box-shadow:
+    0 0 0 2px rgba(0,87,217,.18),
+    0 4px 11px rgba(0,87,217,.28),
+    inset 0 1px 0 rgba(255,255,255,.22);
+}
+
+/* === HISTORY VISUAL PRIORITY END === */

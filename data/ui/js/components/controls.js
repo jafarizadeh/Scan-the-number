@@ -26,6 +26,11 @@ export function controlsHTML(){
     <div class="toggleLeft">Double Match</div>
     <div id="doubleMatchSwitch" class="switch"></div>
   </div>
+
+  <div id="spinAutoToggle" class="toggleCard">
+    <div class="toggleLeft">Spin Auto</div>
+    <div id="spinAutoSwitch" class="switch"></div>
+  </div>
 </section>
   `;
 }
@@ -46,6 +51,7 @@ export function bindControls(actions){
   bindToggle("soundToggle", actions.toggleSound);
   bindToggle("armToggle", actions.toggleArm);
   bindToggle("doubleMatchToggle", actions.toggleDoubleMatch);
+  bindToggle("spinAutoToggle", actions.toggleSpinAuto);
 }
 
 export function renderControls(){
@@ -57,5 +63,10 @@ export function renderControls(){
   setSwitch(
     "doubleMatchSwitch",
     !!state.appSettings?.doubleMatchEnabled
+  );
+
+  setSwitch(
+    "spinAutoSwitch",
+    state.appSettings?.spinAutoEnabled !== false
   );
 }

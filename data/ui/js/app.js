@@ -2,7 +2,7 @@ import { getJSON, postJSON } from "./api.js";
 import { state, editingList, cloneSettings, settingsSource } from "./state.js";
 
 import { headerHTML, bindHeader, renderHeader } from "./components/header.js";
-import { controlsHTML, bindControls, renderControls } from "./components/controls.js?v=touch-controls-2";
+import { controlsHTML, bindControls, renderControls } from "./components/controls.js?v=spin-auto-1";
 import { cameraHTML, bindCamera, renderCamera } from "./components/camera.js";
 import { infoPanelHTML, renderInfoPanel } from "./components/infoPanel.js";
 import { activeListHTML, bindActiveList, renderActiveList } from "./components/activeList.js";
@@ -12,6 +12,8 @@ import { matchModalHTML, bindMatchModal, showMatchIfNeeded } from "./components/
 import { settingsPageHTML, bindSettingsPage, renderSettingsPage, showSettingsView, showMainView, setSettingsMessage } from "./components/settingsPage.js";
 import { numberPickerModalHTML, bindNumberPicker, renderNumberPicker, openNumberPicker, closeNumberPicker } from "./components/numberPickerModal.js";
 import { shutdownModalHTML, bindShutdownModal, openShutdownModal, closeShutdownModal, setShutdownMessage } from "./components/shutdownModal.js";
+
+let lastTapperAutoOffMatchId = null;
 
 const actions = {
   openShutdownModal(){
@@ -63,6 +65,21 @@ const actions = {
     });
 
     state.appSettings.doubleMatchEnabled = !!result.doubleMatchEnabled;
+    renderAll();
+  },
+
+  async toggleSpinAuto(){
+    if(!state.appSettings) return;
+
+    // Missing value means ON for backward compatibility.
+    const current = state.appSettings.spinAutoEnabled !== false;
+    const enabled = !current;
+
+    const result = await postJSON("/api/spin-auto", {
+      enabled
+    });
+
+    state.appSettings.spinAutoEnabled = !!result.spinAutoEnabled;
     renderAll();
   },
 
@@ -309,6 +326,19 @@ async function loadSettings(){
 async function poll(){
   try{
     state.liveStatus = await getJSON("/api/status");
+
+    const latestMatch = state.liveStatus?.latestMatch;
+
+    if(
+      latestMatch?.tapperAutoDisabled &&
+      latestMatch.id !== lastTapperAutoOffMatchId
+    ){
+      lastTapperAutoOffMatchId = latestMatch.id;
+
+      // Backend has persistently disarmed the Tapper.
+      // Refresh settings once so the visible toggle also turns OFF.
+      state.appSettings = await getJSON("/api/settings");
+    }
 
     if(
       state.liveStatus.selectedList &&
