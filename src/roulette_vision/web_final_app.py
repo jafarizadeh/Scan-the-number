@@ -479,13 +479,12 @@ class FinalVisionHub:
         else:
             tapper_auto_disabled = False
 
-            # Spin Auto OFF = manual re-arm mode.
+            # Spin Auto OFF = sound on match, tapper on non-match.
             #
             # MATCH:
             #   Sound only.
-            #   Tapper does NOT run.
-            #   Tapper is then persistently switched OFF and must be
-            #   manually re-enabled by the user.
+            #   Tapper does NOT run for this match.
+            #   The persistent Tapper toggle remains unchanged.
             #
             # NON-MATCH:
             #   Tapper runs only if the user has manually enabled it.
@@ -496,20 +495,6 @@ class FinalVisionHub:
                         tapper=False,
                         reason="number_in_selected_list_spin_auto_off",
                     )
-
-                    current_hardware = dict(
-                        self.store.get().get("hardware", {})
-                    )
-
-                    if current_hardware.get("actuatorEnabled", False):
-                        current_hardware["actuatorEnabled"] = False
-
-                        saved_hardware = self.store.update_hardware(
-                            current_hardware
-                        )
-
-                        self.actions.update_config(saved_hardware)
-                        tapper_auto_disabled = True
 
                 else:
                     action_result = trigger_components(
